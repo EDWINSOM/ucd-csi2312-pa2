@@ -1,5 +1,6 @@
 #include <iostream>
 #include "Point.h"
+#include "Cluster.h"
 
 
 using namespace std;

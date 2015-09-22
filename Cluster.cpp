@@ -141,11 +141,6 @@ void Cluster::add(const PointPtr & point)                      // add a point
 // remove a point and return it so we can add it to another cluster
 const PointPtr& Cluster::remove(const PointPtr& unwantedPoint)
 {
-    // temp Node
-    LNodePtr newNode = new LNode;
-    newNode->p = unwantedPoint;     // our newNode pointer points to address of unwanted point
-
-
 
     for(int i = 0 ; i < size ; i++)
     {
@@ -154,17 +149,11 @@ const PointPtr& Cluster::remove(const PointPtr& unwantedPoint)
             delete (this->points->p[i]);            // deallocated memory for that point
             selectionSort(*this);                   // reorder Point-s in array
 
-            delete newNode->p;                      // delete tempNode's pointer
-            delete newNode;                         // delete tempNode
-
-            return newNode->p;
+            return this->points->p;
         }
     }
 
-    delete newNode->p;                      // delete tempNode's pointer
-    delete newNode;                         // delete tempNode
-
-    return(newNode->p);
+    return this->points->p;
 }
 
 
@@ -245,7 +234,7 @@ Cluster& Cluster::operator+=(const Cluster &rhs)
 }
 
 // union of sets lhs and rhs
-friend const Cluster Cluster::operator+(const Cluster &lhs, const Cluster &rhs)
+friend const Cluster operator+(const Cluster &lhs, const Cluster &rhs)
 {
     int unionSize = (lhs.size + rhs.size);
     Cluster unionCluster(unionSize);
@@ -257,5 +246,86 @@ friend const Cluster Cluster::operator+(const Cluster &lhs, const Cluster &rhs)
 
 }
 
+// (asymmetric) difference
+Cluster& Cluster::operator-=(const Cluster &rhs)
+{
+
+
+    for (int n = 0; n < size ; n++)
+    {
+        for (int o = 0; o < rhs.size ; o++)
+        {
+            if (rhs.points->p[o] == points->p[n])
+            {
+                remove(&(points->p[n]));                // sends address of unwanted point
+            }
+        }
+
+    }
+
+    return (*this);
+}
+
+friend const Cluster operator-(const Cluster &lhs, const Cluster &rhs)
+{
+
+    Cluster unionCluster(lhs);          // unionCluster becomes lhs, in seperate memory of course, but has same size and Points
+
+    unionCluster -= rhs;
+
+    return unionCluster;
+}
+
+
+// add point
+Cluster& Cluster::operator+=(const Point &rhs)
+{
+    // temp Node
+    LNodePtr newNode = new LNode;
+    newNode->p = new Point[size];               // size of calling cluster
+
+    for (int i = 0; i < size ; i++)
+    {
+        newNode->p[i] = points->p[i];           // copy everything in calling cluster's Point array into our temp Node Point array
+    }
+
+    for (int j = 0; j < size ; j++)
+    {
+        delete points->p[j];                // deallocate every Point in calling cluster's Point array
+    }
+    delete points->p;                       // delete pointer's address
+
+    size += 1;                              // increase number of Point's within cluster by 1
+    points->p = new Point[size];            // create new Point array large enough to house previous Point objects plus 1
+
+    this->points->p[size-1] = (rhs);     // adds this point to our Point array
+    selectionSort(*this);
+
+    delete newNode->p;                  // deletes tempNode's pointer
+    delete newNode;                     // deletes tempNode
+
+    return (*this);
+}
+
+// remove point
+Cluster& Cluster::operator-=(const Point &rhs)
+{
+    for(int i = 0 ; i < size ; i++)
+    {
+        if(this->points->p[i] == (rhs))              // uses Point's overloaded ==
+        {
+            delete (this->points->p[i]);            // deallocated memory for that point
+            selectionSort(*this);                   // reorder Point-s in array
+
+            return (*this);
+        }
+    }
+}
+
+// passing in a pointer by reference
+friend const Cluster operator+(const Cluster &lhs, const PointPtr &rhs)
+{
+
+}
 
 
