@@ -16,6 +16,8 @@ namespace Clustering {
 
     class Point {
 
+        int m_Dims;                                       // number of dimensions of the point
+        double *m_values;                                 // values of the point's dimensions
 
     public:
         // Constructors
@@ -61,10 +63,6 @@ namespace Clustering {
         friend bool operator>=(const Point &, const Point &);
 
         friend std::ostream &operator<<(std::ostream &, const Point &);
-
-    private:
-        int m_Dims;                                       // number of dimensions of the point
-        double *m_values;                                 // values of the point's dimensions
 
 
     };

@@ -1,331 +1,287 @@
-//
-// Created by marisa on 9/19/15.
-//
+// DO NOT:      1. dereference head pointer         2. dereference nullptr!
 
 #include "Cluster.h"
-#include <iostream>;
-#include <iomanip>
+#include <iostream>
+#include <cassert>
+#include <cstdlib>
 
 using namespace std;
-using namespace Clustering;
 
 
+namespace Clustering {
 
 
 // Copy Constructor
 // Cluster c2(c1)
-Cluster::Cluster(const Cluster &cluster): size(cluster.size)
-{
-    LNodePtr newNode = new LNode;
-    newNode->p = new Point[size];            // PointPtr p now points to a dynamic Point array
 
-    for(int i = 0; i < size ; i++)
+    Cluster::Cluster(const Cluster &cluster): size(cluster.size)
     {
-        newNode->p[i] = cluster.points->p[i];     // copy all of clusters Point array elements (Point objects) into new
-                                                // cluster's dynamic Point array , data is independent and seperate
-    }
+       if(size == 0)                             // if cluster is empty, set new cluster's head to null pointer and size 0;
+       {
+           head = nullptr;
+           return;
+       }
 
-    cluster.points->next = points;             // cluster passed in now points to head of our new cluster
-
-    newNode->next = nullptr;                    // marks end of linked list
-
-    selectionSort(*this);
-
-}
+        NodePtr node1 = new Node;                    // if cluster is not of size 0, create 1 new node for new cluster
+        head = node1;                                // let head point to this new node (1st node in our list)
 
 
-// Assignment Operator
-Cluster& Cluster::operator=(const Cluster &cluster)
-{
-    if(this == &cluster)                    // Prevents self-assignment
-    {
-        selectionSort(*this);
-        return *this;
-    }
+        NodePtr current = cluster.head;
+        NodePtr copy = head;                        // points to 1st node in our new cluster
 
-    else
-    {
-        for(int j = 0; j < size; j++)
-            delete points->p[j];             // delete dynamic Point array elements
-
-        delete [] points->p;                  // if calling cluster already exists, clear pointer to dynamic point array
-        delete [] points;                   // essentially deleting the node by deleting pointer to node
-    }
-    size = cluster.size;
-
-    LNodePtr newNode = new LNode;
-    newNode->p = new Point[size];            // PointPtr p now points to a dynamic Point array
-
-    for (int i = 0; i < size ; i++)
-    {
-        newNode->p[i] = cluster.points->p[i];   // fill our new Point array with points of cluster passed in
-    }
-
-    cluster.points->next = points;             // cluster passed in now points to head of our new cluster
-    newNode->next = nullptr;                    // marks end of linked list
-
-    selectionSort(*this);
-    return *this;
-
-}
-
-// Destructor
-Cluster::~Cluster()
-{
-    for(int j = 0; j < size; j++)
-        delete points->p[j];                 // delete dynamic Point array elements
-
-    delete [] points->p;                     // if calling cluster already exists, clear pointer to dynamic point array
-    delete [] points;                        // essentially deleting the node by deleting pointer to node
-}
-
-
-// selection sort to sort Points within cluster dynamic array in
-// lexicographic order
-void Cluster::selectionSort(Cluster & cluster)
-{
-    int startScan,minIndex;
-    Point minValue;
-
-    for(startScan = 0; startScan < (size - 1) ; startScan++)
-    {
-        minIndex = startScan;
-        minValue = cluster.points->p[startScan];
-
-        for(int index = startScan+1; index < size ; index++)
+        for(int i = 0;  i < size-1 ; i++)           // creates however many nodes we need
         {
-            if (cluster.points->p[index] < minValue)                   // uses overloaded < Point operator with polymorphism
-            {
-                minValue = cluster.points->p[index];
-                minIndex = index;
-            }
+            NodePtr node = new Node;
+            copy->nextNode = node;                           // connect previous node to our new node
+            copy = copy->nextNode;
         }
-        cluster.points->p[minIndex] = cluster.points->p[startScan];
-        cluster.points->p[startScan] = minValue;
-    }
+
+        copy->nextNode = nullptr;                           // set last node's nextNode to null pointer to terminate list
+        copy = head;                                        // make copy point to head of our new linked list again
+
+        while (current != nullptr)                                 // will not run if cluster is an empty cluster
+        {
+            copy->pointPointer = current->pointPointer;         // copies every pointer in cluster into our new cluster
+            current = current->nextNode;
+            copy = copy->nextNode;
+        }
+
         return;
-}
-
-
-// Set functions: They allow calling c1.add(c2.remove(p));
-void Cluster::add(const PointPtr & point)                      // add a point
-{
-    // temp Node
-    LNodePtr newNode = new LNode;
-    newNode->p = new Point[size];
-
-    for (int i = 0; i < size ; i++)
-    {
-        newNode->p[i] = points->p[i];           // copy everything in calling cluster's Point array into our temp Node Point array
     }
 
-    for (int j = 0; j < size ; j++)
+
+
+    // Assignment Operator
+    Cluster& Cluster::operator=(const Cluster &cluster)
     {
-        delete points->p[j];                // deallocate every Point in calling cluster's Point array
-    }
-    delete points->p;                       // delete pointer's address
-
-    size += 1;
-    points->p = new Point[size];            // create new Point array large enough to house previous Point objects plus 1
-
-    this->points->p[size-1] = (*point);     // adds this point to our Point array
-    selectionSort(*this);
-
-    delete newNode->p;                  // deletes tempNode's pointer
-    delete newNode;                     // deletes tempNode
-
-    return;
-}
-
-
-// remove a point and return it so we can add it to another cluster
-const PointPtr& Cluster::remove(const PointPtr& unwantedPoint)
-{
-
-    for(int i = 0 ; i < size ; i++)
-    {
-        if(this->points->p[i] == (*unwantedPoint))   // uses Point's overloaded ==
+        if( this == &cluster)                    // does not let self assignment occur
         {
-            delete (this->points->p[i]);            // deallocated memory for that point
-            selectionSort(*this);                   // reorder Point-s in array
+            return *this;
+        }
 
-            return this->points->p;
+        NodePtr current = head;
+
+        for (current; current != nullptr ; current = current->nextNode )
+        {
+            delete current->pointPointer;                // deletes each pointPointer from lhs Cluster
+
+        }
+
+        while(head != nullptr)                            // deletes linked list starting from the front
+        {
+            if (head != nullptr) {
+                NodePtr delPtr = head;
+                head = head->nextNode;
+                delete delPtr;
+            }                                           // head will end up pointing to nullptr (is an empty cluster now)
+        }
+
+        (this)->size = cluster.size;                    // set size equal to cluster's size
+
+        if(size == 0)                                    // if cluster is empty, set new cluster's head to null pointer
+        {
+            head = nullptr;
+            return (*this);
+        }
+
+        NodePtr node1 = new Node;                    // create 1 new node for new cluster
+        head = node1;                                // let head point to this new node (1st node in our list)
+
+
+        NodePtr original = cluster.head;
+        NodePtr newList = head;                               // points to 1st node in our new cluster
+
+        for(int i = 0;  i < size-1 ; i++)                // creates however many nodes we need
+        {
+            NodePtr node = new Node;
+            newList->nextNode = node;                           // connect previous node to our new node
+            newList = newList->nextNode;
+        }
+
+        newList->nextNode = nullptr;                           // set last node's nextNode to null pointer to terminate list
+        newList = head;                                        // make copy point to head of our new linked list again
+
+        while (original != nullptr)
+        {
+            newList->pointPointer = original->pointPointer;         //copies every pointer in cluster into our new cluster
+            original = original->nextNode;
+            newList = newList->nextNode;
+        }
+
+
+        return (*this);
+
+    }
+
+
+    // Destructor
+    Cluster::~Cluster()
+    {
+        NodePtr current = head;
+
+        for (current; current != nullptr ; current = current->nextNode )
+        {
+            delete current->pointPointer;                // deletes each pointPointer
+
+        }
+
+      while(head != nullptr)                            // deletes linked list starting from the front
+        {
+            if (head != nullptr) {
+                NodePtr delPtr = head;
+                head = head->nextNode;
+                delete delPtr;
+            }                                           // head will end up pointing to nullptr (is an empty cluster now)
         }
     }
 
-    return this->points->p;
-}
 
 
-friend std::ostream &operator<<(std::ostream &os, const Cluster &cluster)
-{
-    os << endl << "Point in this cluster: " << endl << endl;
-
-    for(int i = 0; i < cluster.size ; i++)
-        os << setw(7) << cluster.points->p[i];          // Prints out each Point,calls Point overloaded << operator
+    // Set functions: They allow calling c1.add(c2.remove(p));
 
 
-    return os;
-}
-
-
-friend bool operator==(const Cluster &lhs,const Cluster &rhs)
-{
-    if (lhs.size != rhs.size) {
-        return false;
-    }
-    else if (lhs.size == rhs.size)
+    // remove a point and return it so we can add it to another cluster
+    const PointPtr& Cluster::remove(const PointPtr& unwantedPoint)
     {
-        for (int i = 0; i < lhs.size ; i++)
+            assert(this->size != 0);                                     // if empty cluster, exit program
+
+        NodePtr current = head;
+        NodePtr previous = head;
+
+        for (current; current != nullptr ; current = current->nextNode )        // find node w/ matching Point object
         {
-            if(lhs.points->p[i] != rhs.points->p[i])
+            if( (*(current->pointPointer)) == (*unwantedPoint) )
             {
-                return false;
+                PointPtr returnPoint = unwantedPoint;                          // copy address of Point object so we can return it
+                delete current->pointPointer;                                  // delete pointer to matching point
+                previous = current;
+                current = current->nextNode;                                    // now nothing points to node that had Point object
+
+                previous->nextNode = current;                                   // makes previous node's (1 before node w/ matching point object) nextNode point to node
+                                                                                // following the one that held matching Point object
+                --size;
+
+                return returnPoint;                                             // return address of unwanted Point address
             }
+
+            previous = current;
+
         }
 
+        cout << endl << "Such point does not reside in this cluster. Program terminating." << endl;
+        exit(1);                                                // terminates program is such point does not reside in the cluster
+
+
     }
-    return true;
-}
+
+
+    void Cluster::add(const PointPtr & point)                      // add a point
+    {
+       NodePtr newNode = new Node;
+
+        if (size == 0)                                            // if this is an empty cluster
+        {
+            head = newNode;
+            newNode->nextNode = nullptr;
+            newNode->pointPointer = point;
+            return;
+        }
+
+        NodePtr current = head;
+        NodePtr previous = head;
+
+        for (current; current != nullptr ; current = current->nextNode )        // find lexicographic appropriate place to place new Node with Point passed in
+        {
+            // if perfect place found
+            if(( (*(current->pointPointer)) <= (*point) ) && ((*(current->nextNode->pointPointer)) >= (*point)))
+            {
+                previous = current;                                             // keeps track of node before "perfect place"
+                current = current->nextNode;                                    // keeps track of node after "perfect place"
+
+                previous->nextNode = newNode;                                   // set node before place's nextNode pointer to point at our newNode
+                newNode->nextNode = current;                                    // let new node's nextNode pointer point to node after "perfect place"
+                newNode->pointPointer = point;                                  // set newNode's PointPtr to point to Point object to add
+                ++size;
+                return;
+            }
+
+            previous = current;
+        }
+
+        // if we have reached nullptr (end of list), add our new node as last node in list
+        current->nextNode = newNode;
+        newNode->nextNode = nullptr;
+        newNode->pointPointer = point;
+        ++size;
+
+        return;
+
+    }
+
+
+    std::ostream &operator<<(std::ostream &os, const Cluster &cluster)
+    {
+        // Print contents of each node (their Points) contained within cluster
+    }
+
+bool operator==(const Cluster &lhs,const Cluster &rhs)
+    {
+
+    }
 
 // union
 // increases size of calling object to fit both its previous set and the addition of all the Points in the set of rhs
-// appends all of rhs's Points to the calling objects set
-Cluster& Cluster::operator+=(const Cluster &rhs)
-{
-    int s = size;               // hold size value of calling cluster
-
-    // temp Node
-    LNodePtr newNode = new LNode;
-    newNode->p = new Point[size];
-
-    for (int i = 0; i < size ; i++)
+    Cluster& Cluster::operator+=(const Cluster &rhs)
     {
-        newNode->p[i] = points->p[i];           // copy everything in calling cluster's Point array into our temp Node Point array
+
     }
 
-    for (int j = 0; j < size ; j++)
-    {
-        delete points->p[j];                // deallocate every Point in calling cluster's Point array
-    }
-    delete points->p;                       // delete pointer's address
-
-    size += rhs.size;
-    points->p = new Point[size];            // create new Point array large enough to house previous Point objects plus those in rhs
-
-    for (int k = 0; k < s ; k++)
-    {
-        points->p[k] = newNode->p[k];       // copy in previous Point array of calling function
-    }
-
-    for (int l = s ; l < size ; l++)
-    {
-        points->p[l] = rhs.points->p[l];    // copy in rhs Point array
-    }
-
-    for (int m = 0; m < s ; m++)
-    {
-        delete newNode->p[m];               // delete all Point objects in temp Node's Point array
-    }
-    delete newNode->p;                      // delete temp Node's pointer
-    delete newNode;                         // delete temp Node;
-
-    return (*this);
-}
 
 // union of sets lhs and rhs
-friend const Cluster operator+(const Cluster &lhs, const Cluster &rhs)
-{
-    int unionSize = (lhs.size + rhs.size);
-    Cluster unionCluster(unionSize);
+ const Cluster operator+(const Cluster &lhs, const Cluster &rhs)
+    {
 
-    unionCluster += lhs;            // adds all Points from lhs to unionCluster
-    unionCluster += rhs;            // adds all Points from rhs to unionCluster
 
-    return unionCluster;
+    }
 
-}
+
 
 // (asymmetric) difference
-Cluster& Cluster::operator-=(const Cluster &rhs)
-{
-
-
-    for (int n = 0; n < size ; n++)
+    Cluster& Cluster::operator-=(const Cluster &rhs)
     {
-        for (int o = 0; o < rhs.size ; o++)
-        {
-            if (rhs.points->p[o] == points->p[n])
-            {
-                remove(&(points->p[n]));                // sends address of unwanted point
-            }
-        }
 
     }
 
-    return (*this);
-}
-
-friend const Cluster operator-(const Cluster &lhs, const Cluster &rhs)
-{
-
-    Cluster unionCluster(lhs);          // unionCluster becomes lhs, in seperate memory of course, but has same size and Points
-
-    unionCluster -= rhs;
-
-    return unionCluster;
-}
-
-
-// add point
-Cluster& Cluster::operator+=(const Point &rhs)
-{
-    // temp Node
-    LNodePtr newNode = new LNode;
-    newNode->p = new Point[size];               // size of calling cluster
-
-    for (int i = 0; i < size ; i++)
+//!NOT IMPLEMENTING YET!
+ const Cluster operator-(const Cluster &lhs, const Cluster &rhs)
     {
-        newNode->p[i] = points->p[i];           // copy everything in calling cluster's Point array into our temp Node Point array
+
     }
 
-    for (int j = 0; j < size ; j++)
+    // add point
+    Cluster& Cluster::operator+=(const Point &rhs)
     {
-        delete points->p[j];                // deallocate every Point in calling cluster's Point array
+
     }
-    delete points->p;                       // delete pointer's address
 
-    size += 1;                              // increase number of Point's within cluster by 1
-    points->p = new Point[size];            // create new Point array large enough to house previous Point objects plus 1
-
-    this->points->p[size-1] = (rhs);     // adds this point to our Point array
-    selectionSort(*this);
-
-    delete newNode->p;                  // deletes tempNode's pointer
-    delete newNode;                     // deletes tempNode
-
-    return (*this);
-}
-
-// remove point
-Cluster& Cluster::operator-=(const Point &rhs)
-{
-    for(int i = 0 ; i < size ; i++)
+    // remove point
+    Cluster& Cluster::operator-=(const Point &rhs)
     {
-        if(this->points->p[i] == (rhs))              // uses Point's overloaded ==
-        {
-            delete (this->points->p[i]);            // deallocated memory for that point
-            selectionSort(*this);                   // reorder Point-s in array
 
-            return (*this);
-        }
     }
+
+
+    // passing in a pointer by reference
+const Cluster operator+(const Cluster &lhs, const PointPtr &rhs)
+    {
+
+    }
+
+
+
+
+
+
+
 }
-
-// passing in a pointer by reference
-friend const Cluster operator+(const Cluster &lhs, const PointPtr &rhs)
-{
-
-}
-
 
