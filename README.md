@@ -1,5 +1,7 @@
 # ucd-csi2312-pa2
 Clusters and Points
+
+
 Programmer: Marisa Edwinson
 
 Complier: gcc , gnu
