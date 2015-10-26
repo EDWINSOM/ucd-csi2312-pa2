@@ -4,10 +4,28 @@
 
 #include "Point.h"
 #include <cmath>
+#include <fstream>
+#include <sstream>
+#include <iomanip>
+
+
+// iostream
+using std::cout;
+using std::endl;
+
+// fstream
+using std::ifstream;
+
+// sstream
+using std::stringstream;
+using std::string;
 
 using namespace std;
 
+
+
 namespace Clustering {
+
 
 /*
  * Constructors
@@ -113,6 +131,10 @@ namespace Clustering {
 
 // gets number of dimensions of a Point object
     int Point::getDimension() const {
+
+        if (this == nullptr)
+            return 0;
+
         return m_Dims;
     }
 
@@ -488,15 +510,45 @@ namespace Clustering {
 
 
     ostream &operator<<(std::ostream &os, const Point &point) {
-        os << endl << "This point has " << point.m_Dims << " dimensions with coordinate values : " << endl << "( ";
 
-        for (int i = 0; i < point.m_Dims; i++) {
-            os << point.m_values[i] << "     ";
+        int i = 0;
+        for (; i < (point.m_Dims - 1); i++) {
+            os << std::fixed << std::setprecision(1) << point.m_values[i] << Point::POINT_VALUE_DELIM << ' ';
         }
 
-        os << " )" << endl << endl;
+        os << point.m_values[i];
 
         return os;
+    }
+
+    istream &operator>>(std::istream &os,  Point &point)
+    {
+
+        string line;
+
+            while (getline(os,line))
+            {
+
+                stringstream lineStream(line);
+                string value;
+                double d;
+
+
+                int i =1;
+                while(getline(lineStream, value, Point::POINT_VALUE_DELIM))
+                {
+                    d = stod(value);
+
+                    point.setValue(i++,d);
+                }
+
+
+            }
+
+
+
+
+
     }
 
 }

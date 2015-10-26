@@ -12,7 +12,10 @@
 
 #include <iostream>
 
+
 namespace Clustering {
+
+
 
     class Point {
 
@@ -20,6 +23,8 @@ namespace Clustering {
         double *m_values;                                 // values of the point's dimensions
 
     public:
+
+        static const char POINT_VALUE_DELIM = ',' ;
         // Constructors
         Point();                                              // default constructor
         Point(int);                                           // custom constructor, takes 1 argument
@@ -63,6 +68,7 @@ namespace Clustering {
         friend bool operator>=(const Point &, const Point &);
 
         friend std::ostream &operator<<(std::ostream &, const Point &);
+        friend std::istream &operator>>(std::istream &, Point &);
 
 
     };
