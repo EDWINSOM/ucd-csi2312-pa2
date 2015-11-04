@@ -19,37 +19,21 @@ namespace Clustering {
     };
 
     class Cluster {
-        int size;               // number of nodes in cluster (# of Point objects)
+        unsigned size;               // number of nodes in cluster (# of Point objects)
         NodePtr head;           // pointer to first node
-        int dimension;
+        unsigned dimension;
         Point __centroid;
-        bool validCentroid = true;
+        bool validCentroid = false;
         unsigned int __id;
 
 
     public:
 
 
-
-        class Move
-        {
-        public:
-            Move(){}
-
-            Move(const PointPtr &ptr, Cluster *from, Cluster *to);
-
-            void perform();
-
-        private:
-            Point* toMove;
-            Cluster* origin;
-            Cluster* destination;
-
-        };
         static const char POINT_CLUSTER_ID_DELIM = ':';
 
         Cluster() : size(0), head(nullptr), dimension(0), __centroid(dimension), __id(idGenerate()) {}
-        Cluster(int dim) : size(0), head(nullptr), dimension(dim), __centroid(dim), __id(idGenerate()) {}
+        Cluster(unsigned dim) : size(0), head(nullptr), dimension(dim), __centroid(dim), __id(idGenerate()) {}
 
         static unsigned int idGenerate();
 
@@ -68,8 +52,6 @@ namespace Clustering {
 
         // Overloaded operators
 
-        // IO
-        friend std::ostream &operator<<(std::ostream &, const Cluster &);
 
         // Set-preserving operators (do not duplicate points in the space)
         // - Friends
@@ -94,6 +76,26 @@ namespace Clustering {
         friend std::istream &operator>>(std::istream &, Cluster &);
 
         void pickPoints(int k, PointPtr *pointArray);
+
+        unsigned getSize();
+
+        double intraClusterDistance() const;
+
+
+        class Move
+        {
+        public:
+            Move(){}
+
+            Move(const PointPtr &ptr, Cluster *from, Cluster *to);
+
+        private:
+            void perform();                                     // helper functions
+            Point* toMove;
+            Cluster* origin;
+            Cluster* destination;
+
+        };
 
     } ;
 

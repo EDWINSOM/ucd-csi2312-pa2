@@ -39,18 +39,10 @@ namespace Clustering {
         m_values = new double[2];
     }
 
-// sends in n dimensions, creates array of doubles of size dimensions
-    Point::Point(int dimensions) {
-        if (dimensions == 0)
-            dimensions = 2;
-
-        m_Dims = dimensions;
-        m_values = new double[m_Dims];
-    }
 
 // takes in n dimensions
 // double * coordinates is an array of doubles
-    Point::Point(int dimensions, double *coordinates) {
+    Point::Point(unsigned dimensions, double *coordinates) {
         if (dimensions == 0)
             dimensions = 2;
 
@@ -116,7 +108,7 @@ namespace Clustering {
 
 
 // gets coordinate of dimension of interest
-    double Point::getValue(int dimension) const {
+    double Point::getValue(unsigned dimension) const {
 
         if (dimension >= 1 && dimension <= m_Dims)
             return m_values[dimension - 1];
@@ -130,7 +122,7 @@ namespace Clustering {
     }
 
 // gets number of dimensions of a Point object
-    int Point::getDimension() const {
+    unsigned Point::getDimension() const {
 
         if (this == nullptr)
             return 0;
@@ -141,7 +133,7 @@ namespace Clustering {
 
 // Overloaded [] index operator
 // returns coordinate at index
-    double &Point::operator[](int index) {
+    double &Point::operator[](unsigned index) {
 
         if (index < m_Dims)
            return m_values[index - 1];
@@ -159,7 +151,7 @@ namespace Clustering {
  */
 
 // set coordinate of dimension passed in
-    void Point::setValue(int dimension, double value) {
+    void Point::setValue(unsigned dimension, double value) {
 
         if ((dimension >= 1) && (dimension <= m_Dims))
         {
@@ -512,6 +504,8 @@ namespace Clustering {
     ostream &operator<<(std::ostream &os, const Point &point) {
 
         int i = 0;
+
+
         for (; i < (point.m_Dims - 1); i++) {
             os << std::fixed << std::setprecision(1) << point.m_values[i] << Point::POINT_VALUE_DELIM << ' ';
         }

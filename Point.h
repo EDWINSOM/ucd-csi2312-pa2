@@ -19,16 +19,16 @@ namespace Clustering {
 
     class Point {
 
-        int m_Dims;                                       // number of dimensions of the point
+        unsigned m_Dims;                                       // number of dimensions of the point
         double *m_values;                                 // values of the point's dimensions
 
     public:
 
         static const char POINT_VALUE_DELIM = ',' ;
         // Constructors
-        Point();                                              // default constructor
-        Point(int);                                           // custom constructor, takes 1 argument
-        Point(int, double *);                                // custom constructor, takes 2 arguments
+        Point();                                                // default constructor
+        Point(unsigned d) : m_Dims(d), m_values(nullptr) {}     // custom constructor, takes 1 argument
+        Point(unsigned, double *);                                   // custom constructor, takes 2 arguments
 
         // Big three: cpy ctor, overloaded operator=, dtor
         ~Point();
@@ -36,12 +36,12 @@ namespace Clustering {
         Point &operator=(const Point &);                    // object assigned to another object
 
         // Accessor Functions
-        double getValue(int) const;                    // gets coordinate of dimension of interest
-        int getDimension() const;                      // gets number of dimensions of a Point object
-        double &operator[](int);                       // Overloaded [] index operator
+        double getValue(unsigned) const;                // gets coordinate of dimension of interest
+        unsigned getDimension() const;                      // gets number of dimensions of a Point object
+        double &operator[](unsigned);                  // Overloaded [] index operator
 
         // Mutator Functions
-        void setValue(int, double);                   // sets value of dimension passed in
+        void setValue(unsigned, double);                   // sets value of dimension passed in
 
         // Functions
         double distanceTo(const Point &);             // function calculates the distance between two points

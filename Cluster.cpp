@@ -3,10 +3,10 @@
 #include "Cluster.h"
 #include <iostream>
 #include <cassert>
-#include <cstdlib>
 #include <fstream>
 #include <sstream>
 #include <algorithm>
+#include <iomanip>
 
 using namespace std;
 
@@ -18,7 +18,10 @@ namespace Clustering {
 // Cluster c2(c1)
 
 
-    Cluster::Cluster(Cluster &cluster) : size(cluster.size), dimension(cluster.dimension) {
+    Cluster::Cluster(Cluster &cluster) : size(cluster.size), dimension(cluster.dimension), __centroid(cluster.dimension) {
+
+        this->validCentroid = false;
+
         if (size == 0)                             // if cluster is empty, set new cluster's head to null pointer and size 0;
         {
             head = nullptr;
@@ -32,6 +35,7 @@ namespace Clustering {
 
         NodePtr current = cluster.head;
         NodePtr copy = head;                        // points to 1st node in our new cluster
+        this->__centroid = (*(cluster.head->pointPointer));
 
         for (int i = 0; i < size - 1; i++)           // creates however many nodes we need
         {
@@ -51,7 +55,7 @@ namespace Clustering {
         }
 
         cluster.size = 0;
-        cluster.validCentroid = false;
+
         current = cluster.head;
 
         while (current != nullptr)
@@ -59,8 +63,6 @@ namespace Clustering {
             current->pointPointer = nullptr;
             current = current->nextNode;
         }
-
-        (this->validCentroid) = false;
 
         (this->__centroid) = (this->computeCentroid());
         (this->__id) = (this->idGenerate());
@@ -70,10 +72,13 @@ namespace Clustering {
 
     // Assignment Operator
     Cluster &Cluster::operator=(Cluster &cluster) {
+
         if (this == &cluster)                    // does not let self assignment occur
         {
             return *this;
         }
+
+        this->validCentroid = false;
 
         NodePtr current = head;
 
@@ -91,9 +96,9 @@ namespace Clustering {
             }                                           // head will end up pointing to nullptr (is an empty cluster now)
         }
 
-        (this->validCentroid)=false;
-        (this)->size = cluster.size;                    // set size equal to cluster's size
-        (this)->dimension = cluster.dimension;
+
+        (this->size) = cluster.size;                    // set size equal to cluster's size
+        (this->dimension) = cluster.dimension;
 
 
         if (size == 0)                                    // if cluster is empty, set new cluster's head to null pointer
@@ -107,6 +112,7 @@ namespace Clustering {
 
 
         NodePtr original = cluster.head;
+        this->__centroid = (*(original->pointPointer));
         NodePtr newList = head;                               // points to 1st node in our new cluster
 
         for (int i = 0; i < size - 1; i++)                // creates however many nodes we need
@@ -126,7 +132,6 @@ namespace Clustering {
         }
 
         cluster.size = 0;
-        cluster.validCentroid = false;
         original = cluster.head;
 
         while (original != nullptr)
@@ -144,7 +149,7 @@ namespace Clustering {
 
     // Destructor
     Cluster::~Cluster() {
-        NodePtr current = head;
+
 
 
         while (head != nullptr)                            // deletes linked list starting from the front
@@ -164,8 +169,10 @@ namespace Clustering {
 
     // remove a point and return it so we can add it to another cluster
     const PointPtr &Cluster::remove(const PointPtr &unwantedPoint) {
-        assert(this->size != 0);                                     // if empty cluster, exit program
+
         this->validCentroid = false;
+
+        assert(this->size != 0);                                     // if empty cluster, exit program
 
         if (size == 1) {
             if ((*(head->pointPointer)) == (*unwantedPoint)) {
@@ -224,7 +231,7 @@ namespace Clustering {
     void Cluster::add(const PointPtr &point)                      // add a point
     {
         NodePtr newNode = new Node;
-        (this->validCentroid) = false;
+        this->validCentroid = false;
 
         if (size == 0)                                            // if this is an empty cluster
         {
@@ -233,7 +240,7 @@ namespace Clustering {
             newNode->pointPointer = point;
             ++size;
             (this->dimension) = newNode->pointPointer->getDimension();
-     //       this->setCentroid(*point);
+            this->__centroid = (*point);
             return;
         }
 
@@ -247,7 +254,7 @@ namespace Clustering {
                 newNode->pointPointer = point;
                 ++size;
                 (this->dimension) = newNode->pointPointer->getDimension();
-                (this->__centroid) = this->computeCentroid();
+                (this->__centroid) = (this->computeCentroid());
                 return;
             }
             else {
@@ -342,7 +349,7 @@ namespace Clustering {
 
         for (current; current != nullptr; current = current->nextNode) {
             temp = (*(current->pointPointer));
-            os  << temp << "\t\t" << (Cluster::POINT_CLUSTER_ID_DELIM) << cluster.__id << endl;
+            os   << temp  << (Cluster::POINT_CLUSTER_ID_DELIM) << "   " << cluster.__id << endl;
 
         }
 
@@ -378,18 +385,19 @@ namespace Clustering {
 // union
 // increases size of calling object to fit both its previous set and the addition of all the Points in the set of rhs
     Cluster &Cluster::operator+=(const Cluster &rhs) {
+
         if (rhs.size == 0) {
             return (*this);
         }
 
-
+        this->validCentroid = false;
         NodePtr current = rhs.head;
 
         for (current; current != nullptr; current = current->nextNode) {
             (*this).add(current->pointPointer);
         }
 
-        this->validCentroid = false;
+
         (this->__centroid) = this->computeCentroid();
         return (*this);
 
@@ -401,8 +409,8 @@ namespace Clustering {
         Cluster sendBack(lhs);
 
         sendBack += rhs;
+        this->validCentroid = false;
 
-        sendBack.validCentroid = false;
         (sendBack.__centroid) = sendBack.computeCentroid();
         return sendBack;
 
@@ -411,6 +419,9 @@ namespace Clustering {
 
 // (asymmetric) difference
     Cluster &Cluster::operator-=(const Cluster &rhs) {
+
+        this->validCentroid = false;
+
         NodePtr q = rhs.head;
 
         while (q != nullptr) {
@@ -418,18 +429,20 @@ namespace Clustering {
             q = q->nextNode;
         }
 
-        (this->validCentroid) = false;
+
         (this->__centroid) = this->computeCentroid();
         return (*this);
 
     }
 
     const Cluster operator-(Cluster &lhs, Cluster &rhs) {
+
+        this->validCentroid = false;
+
         Cluster m(lhs);
 
         m -= rhs;
 
-        m.validCentroid = false;
         m.__centroid = m.computeCentroid();
         return m;
 
@@ -438,11 +451,11 @@ namespace Clustering {
     // add point
     Cluster &Cluster::operator+=(const Point &rhs) {
 
+        this->validCentroid = false;
+
         PointPtr copy = new Point(rhs);
 
-
           this->add(copy);
-        (this->validCentroid) = false;
         (this->__centroid) = this->computeCentroid();
         return (*this);
     }
@@ -450,12 +463,11 @@ namespace Clustering {
     // remove point
     Cluster &Cluster::operator-=(const Point &rhs) {
 
+        this->validCentroid = false;
         PointPtr copy = new Point(rhs);
-
 
         this->remove(copy);
 
-        (this->validCentroid) = false;
         (this->__centroid) = this->computeCentroid();
         return (*this);
     }
@@ -463,27 +475,31 @@ namespace Clustering {
 
 const Cluster operator+(Cluster &lhs, PointPtr &rhs)
 {
+    this->validCentroid = false;
+
     Cluster funcCluster(lhs);
 
     PointPtr copy = new Point(*rhs);
 
     funcCluster.add(copy);
 
-    funcCluster.validCentroid = false;
+
     funcCluster.__centroid = funcCluster.computeCentroid();
     return funcCluster;
 
 }
     const Cluster operator-(Cluster &lhs, PointPtr &rhs)
     {
+        this->validCentroid = false;
+
         Cluster funcCluster(lhs);
 
         PointPtr copy = new Point(*rhs);
 
         funcCluster.remove(copy);
 
-        funcCluster.validCentroid = false;
         funcCluster.__centroid = funcCluster.computeCentroid();
+
         return funcCluster;
     }
 
@@ -493,7 +509,7 @@ const Cluster operator+(Cluster &lhs, PointPtr &rhs)
 
         while(getline(os,line))
         {
-            int d = (int) std::count(line.begin(), line.end(),  ',');
+            unsigned d = (unsigned) std::count(line.begin(), line.end(),  ',');
 
             PointPtr ptr = new Point(d+1);
 
@@ -502,60 +518,53 @@ const Cluster operator+(Cluster &lhs, PointPtr &rhs)
             lineStream >> (*ptr);
 
             cluster.add(ptr);
-
+            cluster.dimension = (d+1);
         }
 
-        (cluster.validCentroid) = false;
-        cluster.__centroid = cluster.computeCentroid();
+        cluster.validCentroid = false;
+        cluster.__centroid = (*(cluster.head->pointPointer));
+        cluster.__centroid = cluster.computeCentroid();         // CENTROID
+
         return os;
     }
 
     const Point& Cluster::setCentroid(const Point & point)
     {
+        this->validCentroid = true;
+
         if ((point.getDimension()) == (this->dimension))
         {
             this->__centroid = point;
-            (this->validCentroid) = true;
             return this->__centroid;
         }
         else
         {
             cout << "Setting of centroid failed. Dimensionality error. " << endl;
-            (this->validCentroid) = false;
             return this->__centroid;
         }
     }
 
+
     const Point Cluster::getCentroid() const
     {
+
         return this->__centroid;
     }
 
     const Point& Cluster::computeCentroid()
     {
-        int divider = 0;
-        NodePtr tracker = (this->head);
+        this->validCentroid = true;
+
+        (this->__centroid) /= (this->size);
+        NodePtr tracker = (this->head->nextNode);
 
         while(tracker != nullptr)
         {
-
-            if (divider >= 5)
-            {
-                (this->__centroid) /= divider;
-                divider = 0;
-            }
-
-            (this->__centroid) += (*(tracker->pointPointer));
+            (this->__centroid) += ( (*(tracker->pointPointer))/ (this->size));
             tracker = (tracker->nextNode);
-            ++divider;
         }
 
-        if(divider != 0)
-        {
-            (this->__centroid) /= divider;
-        }
-
-        (this->validCentroid) = true;
+        this->setCentroid(this->__centroid);
         return (this->__centroid);
     }
 
@@ -571,6 +580,9 @@ const Cluster operator+(Cluster &lhs, PointPtr &rhs)
 
     Cluster::Move::Move(const PointPtr & ptr, Cluster* from, Cluster*to)
     {
+        from->validCentroid = false;
+        to->validCentroid = false;
+
         (this->toMove) = ptr;
         (this->destination) = (to);
         (this->origin) = (from);
@@ -586,7 +598,49 @@ const Cluster operator+(Cluster &lhs, PointPtr &rhs)
     void Cluster::pickPoints(int k, PointPtr *pointArray)
     {
 
+        NodePtr current = head;
+        int i = 0;
+
+        for (int j = 0; j < k; j++)
+        {
+            (*(pointArray[j])) = (*(current->pointPointer));
+
+            while((current != nullptr) && ( i != 10) )
+            {
+                current = current->nextNode;
+                ++i;
+            }
+        }
     }
+
+    unsigned Cluster::getSize()
+    {
+        return this->size;
+    }
+
+
+    // sum of the distances between every two points in the cluster. Hint: This
+    // can be done in a double loop through the points of the cluster. However,
+    // this will count every distance twice, so you need to divide the sum by 2 before returning it.
+
+    double Cluster::intraClusterDistance() const
+    {
+        double sum = 0;
+        NodePtr current = head;
+        NodePtr next = head->nextNode;
+
+
+        for (next; next != nullptr ; next = next->nextNode )
+        {
+            sum = (*(current->pointPointer)).distanceTo(*(next->pointPointer));
+            current = current->nextNode;
+        }
+
+    }
+
+    
+
+
 
 }
 
