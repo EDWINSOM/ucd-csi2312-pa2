@@ -71,7 +71,7 @@ namespace Clustering {
 
 
     // Assignment Operator
-    Cluster &Cluster::operator=(Cluster &cluster) {
+    Cluster &Cluster::operator=(  Cluster &cluster) {
 
         if (this == &cluster)                    // does not let self assignment occur
         {
@@ -409,7 +409,7 @@ namespace Clustering {
         Cluster sendBack(lhs);
 
         sendBack += rhs;
-        this->validCentroid = false;
+        sendBack.validCentroid = false;
 
         (sendBack.__centroid) = sendBack.computeCentroid();
         return sendBack;
@@ -437,11 +437,11 @@ namespace Clustering {
 
     const Cluster operator-(Cluster &lhs, Cluster &rhs) {
 
-        this->validCentroid = false;
-
         Cluster m(lhs);
 
         m -= rhs;
+
+        m.validCentroid = false;
 
         m.__centroid = m.computeCentroid();
         return m;
@@ -475,7 +475,7 @@ namespace Clustering {
 
 const Cluster operator+(Cluster &lhs, PointPtr &rhs)
 {
-    this->validCentroid = false;
+
 
     Cluster funcCluster(lhs);
 
@@ -483,20 +483,21 @@ const Cluster operator+(Cluster &lhs, PointPtr &rhs)
 
     funcCluster.add(copy);
 
-
+    funcCluster.validCentroid = false;
     funcCluster.__centroid = funcCluster.computeCentroid();
     return funcCluster;
 
 }
     const Cluster operator-(Cluster &lhs, PointPtr &rhs)
     {
-        this->validCentroid = false;
 
         Cluster funcCluster(lhs);
 
         PointPtr copy = new Point(*rhs);
 
         funcCluster.remove(copy);
+
+        funcCluster.validCentroid = false;
 
         funcCluster.__centroid = funcCluster.computeCentroid();
 
@@ -595,23 +596,43 @@ const Cluster operator+(Cluster &lhs, PointPtr &rhs)
         (*destination).add((*origin).remove(this->toMove));
     }
 
-    void Cluster::pickPoints(int k, PointPtr *pointArray)
+    void Cluster::pickPoints(int k, Point pointArray [])
     {
+            NodePtr current;
 
-        NodePtr current = head;
-        int i = 0;
+            unsigned interval;
+            int newStep = 1;
+            int count;
 
-        for (int j = 0; j < k; j++)
-        {
-            (*(pointArray[j])) = (*(current->pointPointer));
-
-            while((current != nullptr) && ( i != 10) )
+            // Checks to see if k is greater than the number of points in the cluster
+            if(k > size)
             {
-                current = current->nextNode;
-                ++i;
+                k = size;
             }
+            interval = size/k;
+
+
+            for(int i = 0; i < k; i++)
+            {
+            // cout << "step going into iteration: " << newStep << endl;
+                current = head;
+                count = 1;
+
+                while(current)
+                {
+            // cout << "Point: " << *travelNode->p << endl;
+                    if(count == newStep)
+                    {
+                        pointArray[i] = (*(current->pointPointer));
+                    }
+                    count++;
+                    current = current->nextNode;
+                }
+                newStep+=interval;
+            }
+
         }
-    }
+
 
     unsigned Cluster::getSize()
     {
@@ -629,20 +650,65 @@ const Cluster operator+(Cluster &lhs, PointPtr &rhs)
         NodePtr current = head;
         NodePtr next = head->nextNode;
 
+        for (current; current != nullptr; current = current->nextNode)
+            {
 
-        for (next; next != nullptr ; next = next->nextNode )
-        {
-            sum = (*(current->pointPointer)).distanceTo(*(next->pointPointer));
-            current = current->nextNode;
-        }
+              for (next; next != nullptr; next = next->nextNode)
+                 {
+                     sum += (*(current->pointPointer)).distanceTo(*(next->pointPointer));
+
+                 }
+
+             next = head;
+            }
+
+        return sum/2.0;
 
     }
 
-    
+// sum of the distances between every point in two clusters
+
+  double interClusterDistance(const Cluster &c1, const Cluster &c2)
+   {
+       double sum = 0;
+       NodePtr first = c1.head;
+       NodePtr second = c2.head;
+
+       for (first; first != nullptr ; first = first->nextNode)
+       {
+           for (second ; second != nullptr ; second = second->nextNode)
+           {
+               sum += (*(first->pointPointer)).distanceTo(*(second->pointPointer));
+           }
+
+           second = c2.head;
+       }
+
+        return sum/2.0;
+   }
+
+    // returns the number of distinct point pairs, or edges, in a cluster. (That is,
+    // every two distinct points have an imaginary edge between them. Its length is
+    // the distance between the two points.) This is simply size * (size - 1) / 2,
+    // where size is the size of the cluster.
+
+    int Cluster::getClusterEdges()
+    {
+       return size * (size - 1) / 2;
+
+    }
+
+    double interClusterEdges(const Cluster &c1, const Cluster &c2)
+    {
+        return (c1.size * c2.size / 2);
+    }
 
 
-
+    unsigned Cluster::getDimension() {
+        return dimension;
+    }
 }
+
 
 
 

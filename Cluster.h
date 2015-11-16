@@ -13,6 +13,7 @@ namespace Clustering {
     typedef struct Node *NodePtr;
 
 
+
     struct Node {
         PointPtr pointPointer;         // Pointer to each Node's Point object
         NodePtr nextNode;             // Pointer to next node in the list
@@ -28,7 +29,7 @@ namespace Clustering {
 
 
     public:
-
+        friend class KMeans;
 
         static const char POINT_CLUSTER_ID_DELIM = ':';
 
@@ -75,11 +76,18 @@ namespace Clustering {
         friend std::ostream &operator<<(std::ostream &, const Cluster &);
         friend std::istream &operator>>(std::istream &, Cluster &);
 
-        void pickPoints(int k, PointPtr *pointArray);
+        void pickPoints(int k, Point []);
 
         unsigned getSize();
+        unsigned getDimension();
 
         double intraClusterDistance() const;
+
+        friend double interClusterDistance(const Cluster &c1, const Cluster &c2);
+
+        int getClusterEdges();
+
+        friend double interClusterEdges(const Cluster &c1, const Cluster &c2);
 
 
         class Move
@@ -101,4 +109,5 @@ namespace Clustering {
 
 }
 #endif //CLUSTERING_CLUSTER_H
+
 

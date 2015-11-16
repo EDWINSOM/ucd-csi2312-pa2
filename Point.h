@@ -27,7 +27,7 @@ namespace Clustering {
         static const char POINT_VALUE_DELIM = ',' ;
         // Constructors
         Point();                                                // default constructor
-        Point(unsigned d) : m_Dims(d), m_values(nullptr) {}     // custom constructor, takes 1 argument
+        Point(unsigned d);     // custom constructor, takes 1 argument
         Point(unsigned, double *);                                   // custom constructor, takes 2 arguments
 
         // Big three: cpy ctor, overloaded operator=, dtor
@@ -77,3 +77,4 @@ namespace Clustering {
 
 
 #endif //PA2_POINT_H
+

@@ -39,6 +39,14 @@ namespace Clustering {
         m_values = new double[2];
     }
 
+    Point::Point(unsigned d)
+    {
+        if (d == 0)
+            d = 2;
+
+        m_Dims = d;
+        m_values = new double[m_Dims];
+    }
 
 // takes in n dimensions
 // double * coordinates is an array of doubles
@@ -155,7 +163,7 @@ namespace Clustering {
 
         if ((dimension >= 1) && (dimension <= m_Dims))
         {
-            m_values[dimension - 1] = value;
+            m_values[dimension-1] = value;
             return;
         }
 
@@ -544,5 +552,6 @@ namespace Clustering {
 
 
     }
+
 
 }
