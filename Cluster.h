@@ -7,6 +7,8 @@
 
 #include "Point.h"
 
+using namespace std;
+
 namespace Clustering {
 
     typedef Point *PointPtr;
@@ -33,8 +35,8 @@ namespace Clustering {
 
         static const char POINT_CLUSTER_ID_DELIM = ':';
 
-        Cluster() : size(0), head(nullptr), dimension(0), __centroid(dimension), __id(idGenerate()) {}
-        Cluster(unsigned dim) : size(0), head(nullptr), dimension(dim), __centroid(dim), __id(idGenerate()) {}
+        Cluster() : size(0), head(nullptr), dimension(0), __centroid(dimension), __id(idGenerate()) { cout << endl << "new cluster: " << __id << endl;}
+        Cluster(unsigned dim) : size(0), head(nullptr), dimension(dim), __centroid(dim), __id(idGenerate()) {cout << endl << "new cluster: " << __id << endl;}
 
         static unsigned int idGenerate();
 
@@ -76,7 +78,7 @@ namespace Clustering {
         friend std::ostream &operator<<(std::ostream &, const Cluster &);
         friend std::istream &operator>>(std::istream &, Cluster &);
 
-        void pickPoints(int k, Point []);
+        void pickPoints(int k, Point [] );
 
         unsigned getSize();
         unsigned getDimension();
@@ -95,7 +97,7 @@ namespace Clustering {
         public:
             Move(){}
 
-            Move(const PointPtr &ptr, Cluster *from, Cluster *to);
+            Move(const PointPtr &ptr, Cluster* &from, Cluster* &to);
 
         private:
             void perform();                                     // helper functions

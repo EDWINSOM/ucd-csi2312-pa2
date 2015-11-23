@@ -26,6 +26,7 @@ namespace Clustering {
         {
             head = nullptr;
             (this->__id) = (this->idGenerate());
+            cout << endl << "new cluster created: " << this->__id << endl;
             return;
         }
 
@@ -66,6 +67,8 @@ namespace Clustering {
 
         (this->__centroid) = (this->computeCentroid());
         (this->__id) = (this->idGenerate());
+
+        cout << endl << "new cluster created: " << (this->__id) << endl;
         return;
     }
 
@@ -142,6 +145,7 @@ namespace Clustering {
 
         (this->__centroid) = (this->computeCentroid());
         (this->__id) = (this->idGenerate());
+        cout << endl << "new cluster created: " << (this->__id) << endl;
         return (*this);
 
     }
@@ -579,7 +583,7 @@ const Cluster operator+(Cluster &lhs, PointPtr &rhs)
     }
 
 
-    Cluster::Move::Move(const PointPtr & ptr, Cluster* from, Cluster*to)
+    Cluster::Move::Move(const PointPtr & ptr, Cluster* &from, Cluster* &to)
     {
         from->validCentroid = false;
         to->validCentroid = false;
@@ -587,6 +591,8 @@ const Cluster operator+(Cluster &lhs, PointPtr &rhs)
         (this->toMove) = ptr;
         (this->destination) = (to);
         (this->origin) = (from);
+
+        cout << endl << endl << "Moving point " << *ptr << " from point space to cluster number " << to->__id << endl << endl;
 
         perform();
     }
@@ -598,37 +604,45 @@ const Cluster operator+(Cluster &lhs, PointPtr &rhs)
 
     void Cluster::pickPoints(int k, Point pointArray [])
     {
-            NodePtr current;
+            cout << endl << "Entering pickPoints " << endl;
 
-            unsigned interval;
-            int newStep = 1;
-            int count;
+            NodePtr current = head;
+            unsigned arrayTracker = 0;
+            unsigned count = 1;
 
             // Checks to see if k is greater than the number of points in the cluster
             if(k > size)
             {
                 k = size;
+                cout << endl << "k is greater than size of cluster, setting k to size of cluster" << endl;
             }
-            interval = size/k;
 
-
-            for(int i = 0; i < k; i++)
+            else if (k < size)
             {
-            // cout << "step going into iteration: " << newStep << endl;
-                current = head;
-                count = 1;
+                cout << endl << "k is less than size of cluster" << endl;
+            }
 
-                while(current)
+            else
+                cout << endl << "k is equal to size of cluster" << endl;
+
+            unsigned interval = size/k;
+
+            pointArray[arrayTracker] = (*(head->pointPointer));
+            current = current->nextNode;
+
+            while (current != nullptr)
+            {
+                if (count == interval)
                 {
-            // cout << "Point: " << *travelNode->p << endl;
-                    if(count == newStep)
-                    {
-                        pointArray[i] = (*(current->pointPointer));
-                    }
-                    count++;
+                    pointArray[arrayTracker] = (*(current->pointPointer));
+                    count = 0;
+
+                }
+                else
+                {
+                    ++count;
                     current = current->nextNode;
                 }
-                newStep+=interval;
             }
 
         }
@@ -648,6 +662,7 @@ const Cluster operator+(Cluster &lhs, PointPtr &rhs)
     {
         double sum = 0;
         NodePtr current = head;
+
         NodePtr next = head->nextNode;
 
         for (current; current != nullptr; current = current->nextNode)

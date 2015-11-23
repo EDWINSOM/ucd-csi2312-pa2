@@ -15,6 +15,7 @@ int main() {
 
     KMeans instance;
 
+
     ifstream myFile("/home/marisa/Projects/interm program/pa2/points.txt");
 
 
