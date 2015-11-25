@@ -514,7 +514,7 @@ namespace Clustering {
         int i = 0;
 
 
-        for (; i < (point.m_Dims - 1); i++) {
+        for ( i ; i < (point.m_Dims - 1); i++) {
             os << std::fixed << std::setprecision(1) << point.m_values[i] << Point::POINT_VALUE_DELIM << ' ';
         }
 

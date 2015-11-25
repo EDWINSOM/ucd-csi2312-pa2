@@ -102,6 +102,7 @@ namespace Clustering {
 
 
         cout << endl << "Point Space:" << *means.point_space << endl;
+
         return istream1;
     }
 
@@ -164,32 +165,44 @@ namespace Clustering {
         ClusterPtr toCluster = nullptr;
         NodePtr current;
 
+        int w = 0;
 
-        for (scoreDiff ; scoreDiff > SCORE_DIFF_THRESHOLD ; scoreDiff = (abs(scoreDiff-score)) )
+        if (k == 1)
         {
-            for (current=means.point_space->head; current!= nullptr ; current = current->nextNode)
-            {
-                for ( int j = 0 ; j < k ; j++)
-                {
-                       readDistance = (*(current->pointPointer)).distanceTo(emptyClusters[j].__centroid);
-                        cout << endl << " Distance between " << (*(current->pointPointer)) << " and " << emptyClusters[j].__centroid << " = " << readDistance << endl;
+            emptyClusters[w] = *means.point_space;
 
-                       if (readDistance < minDistance)
-                       {
-                           pointToMove = current->pointPointer;
-                           toCluster = &emptyClusters[j];
-                           minDistance = readDistance;
-                           cout << endl << " new minDistance = " << minDistance << endl;
-                       }
+        }
 
+
+        else {
+            for (scoreDiff; scoreDiff > SCORE_DIFF_THRESHOLD; scoreDiff = (abs(scoreDiff - score))) {
+                for (current = means.point_space->head; current != nullptr; current = means.point_space->head) {
+                    for (int j = 0; j < k; j++) {
+                        readDistance = (*(current->pointPointer)).distanceTo(emptyClusters[j].__centroid);
+                        cout << endl << " Distance between " << (*(current->pointPointer)) << " and " <<
+                        emptyClusters[j].__centroid << " = " << readDistance << endl;
+
+                        if (readDistance < minDistance) {
+                            pointToMove = current->pointPointer;
+                            toCluster = &emptyClusters[j];
+                            minDistance = readDistance;
+                            cout << endl << " new minDistance = " << minDistance << endl;
+                        }
+
+                    }
+
+                    Cluster::Move(pointToMove, means.point_space, toCluster);
+
+                    cout << endl << *means.point_space << endl;
+
+                    minDistance = 10000;
                 }
 
-                Cluster::Move(pointToMove, means.point_space , toCluster);
-                minDistance = 10000;
-            }
+                score = computeClusteringScore(emptyClusters);
 
-            score = computeClusteringScore(emptyClusters);
+            }
         }
+
 
         ofstream outStream;
         outStream.open("/home/marisa/Projects/interm program/pa2/ClusterData.txt") ;
@@ -214,3 +227,4 @@ namespace Clustering {
 
     }
 }
+

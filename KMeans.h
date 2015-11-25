@@ -28,6 +28,7 @@ namespace Clustering {
 
         KMeans(unsigned kValue, unsigned dim);
 
+        ~KMeans(){delete point_space;}
 
         double computeClusteringScore(Cluster  []);
 
@@ -40,3 +41,4 @@ namespace Clustering {
 
 
 #endif //PA2_KMEANS_H
+

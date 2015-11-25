@@ -348,10 +348,10 @@ namespace Clustering {
         os << "Each point has " << cluster.dimension << " dimensions." << endl;
         os << "The points contained are as follows:" << endl << endl;
 
-        NodePtr current = cluster.head;
+        NodePtr current = nullptr;
         Point temp;
 
-        for (current; current != nullptr; current = current->nextNode) {
+        for (current = cluster.head; current != nullptr; current = current->nextNode) {
             temp = (*(current->pointPointer));
             os   << temp  << (Cluster::POINT_CLUSTER_ID_DELIM) << "   " << cluster.__id << endl;
 
@@ -522,6 +522,7 @@ const Cluster operator+(Cluster &lhs, PointPtr &rhs)
 
             lineStream >> (*ptr);
 
+
             cluster.add(ptr);
             cluster.dimension = (d+1);
         }
@@ -625,27 +626,44 @@ const Cluster operator+(Cluster &lhs, PointPtr &rhs)
             else
                 cout << endl << "k is equal to size of cluster" << endl;
 
-            unsigned interval = size/k;
+    if (k != size)
+    {
+        unsigned interval = (size)/k;
+
+        if (interval % 2)
+        {
+            ++interval;
+        }
 
             pointArray[arrayTracker] = (*(head->pointPointer));
             current = current->nextNode;
+            ++arrayTracker;
 
-            while (current != nullptr)
+
+            while ((current != nullptr) && (arrayTracker != k))
             {
                 if (count == interval)
                 {
                     pointArray[arrayTracker] = (*(current->pointPointer));
                     count = 0;
-
+                    ++arrayTracker;
                 }
-                else
-                {
                     ++count;
+
                     current = current->nextNode;
-                }
             }
 
+    }
+        else
+    {
+        while (current != nullptr)
+        {
+            pointArray[arrayTracker] = (*(current->pointPointer));
+            ++arrayTracker;
+            current = current->nextNode;
         }
+    }
+    }
 
 
     unsigned Cluster::getSize()
@@ -662,20 +680,23 @@ const Cluster operator+(Cluster &lhs, PointPtr &rhs)
     {
         double sum = 0;
         NodePtr current = head;
-
+if ( head == nullptr)
+{
+    return sum;
+}
         NodePtr next = head->nextNode;
 
-        for (current; current != nullptr; current = current->nextNode)
-            {
+if (next != nullptr) {
+    for (current; current != nullptr; current = current->nextNode) {
 
-              for (next; next != nullptr; next = next->nextNode)
-                 {
-                     sum += (*(current->pointPointer)).distanceTo(*(next->pointPointer));
+        for (next; next != nullptr; next = next->nextNode) {
+            sum += (*(current->pointPointer)).distanceTo(*(next->pointPointer));
 
-                 }
+        }
 
-             next = head;
-            }
+        next = head;
+    }
+}
 
         return sum/2.0;
 

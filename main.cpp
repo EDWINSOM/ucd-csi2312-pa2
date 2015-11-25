@@ -13,6 +13,7 @@ const double KMeans::SCORE_DIFF_THRESHOLD = 10;
 
 int main() {
 
+
     KMeans instance;
 
 
@@ -22,14 +23,13 @@ int main() {
     if (myFile.is_open())
     {
         myFile >> instance;
-
     }
     else if (myFile.fail())
     {
         cout << "File didn't open";
     }
 
-    instance.clusteringAlgor(instance);
+   instance.clusteringAlgor(instance);
 
     myFile.close();
 
