@@ -18,7 +18,7 @@ namespace Clustering {
 
          point_space = new Cluster;
 
-        cout << endl << "point_space assigned a cluster" << endl;
+       // cout << endl << "point_space assigned a cluster" << endl;
 
     }
 
@@ -40,14 +40,14 @@ namespace Clustering {
         double dIn(0) , dOut(0) , pIn(0) , pOut(0) , betaCV(0);
         double denomenator(0) , numerator(0);
 
-        cout << endl << "Entering computeClusteringScore" << endl;
+//        cout << endl << "Entering computeClusteringScore" << endl;
 
         for (int i = 0; i < k ; i++)
         {
             dIn += ( myClusters[i].intraClusterDistance() );
         }
 
-        cout << endl << " dIn: " << dIn << endl;
+ //       cout << endl << " dIn: " << dIn << endl;
 
 
         for (int j = 0 ; j < k; j++)
@@ -58,14 +58,14 @@ namespace Clustering {
             }
         }
 
-        cout << endl << "dOut: " << dOut << endl;
+ //       cout << endl << "dOut: " << dOut << endl;
 
         for (int n = 0; n < k; n++)
         {
             pIn += ( myClusters[n].getClusterEdges() );
         }
 
-        cout << endl << "pIn: " << pIn << endl;
+//        cout << endl << "pIn: " << pIn << endl;
 
         for (int p = 0 ; p < k; p++)
         {
@@ -75,7 +75,7 @@ namespace Clustering {
             }
         }
 
-        cout << endl << "pOut: " << pOut << endl;
+//        cout << endl << "pOut: " << pOut << endl;
 
 
         denomenator = dOut/pOut;
@@ -84,7 +84,7 @@ namespace Clustering {
 
         betaCV = numerator/denomenator;
 
-        cout << endl << "score = " << betaCV << endl;
+ //       cout << endl << "score = " << betaCV << endl;
 
         return betaCV;
     }
@@ -134,12 +134,14 @@ namespace Clustering {
 
         means.point_space->pickPoints(k ,pointer);
 
-        cout << endl << "Pick points result: ";
+    /*    cout << endl << "Pick points result: ";
 
         for (int counter = 0; counter < k ; counter++)
         {
             cout << endl << fillCentroid[counter] << endl;
         }
+
+     */
 
         Cluster emptyClusters[k];
 
@@ -151,7 +153,7 @@ namespace Clustering {
         for (int i = 0; i < k; i++)
         {
             emptyClusters[i].setCentroid(fillCentroid[i]);
-            cout << endl << "Empty Cluster " << i+1 << " has centroid: " << emptyClusters[i].__centroid << endl;
+          //  cout << endl << "Empty Cluster " << i+1 << " has centroid: " << emptyClusters[i].__centroid << endl;
         }
 
 
@@ -179,21 +181,21 @@ namespace Clustering {
                 for (current = means.point_space->head; current != nullptr; current = means.point_space->head) {
                     for (int j = 0; j < k; j++) {
                         readDistance = (*(current->pointPointer)).distanceTo(emptyClusters[j].__centroid);
-                        cout << endl << " Distance between " << (*(current->pointPointer)) << " and " <<
-                        emptyClusters[j].__centroid << " = " << readDistance << endl;
+                      //  cout << endl << " Distance between " << (*(current->pointPointer)) << " and " <<
+                       // emptyClusters[j].__centroid << " = " << readDistance << endl;
 
                         if (readDistance < minDistance) {
                             pointToMove = current->pointPointer;
                             toCluster = &emptyClusters[j];
                             minDistance = readDistance;
-                            cout << endl << " new minDistance = " << minDistance << endl;
+                     //       cout << endl << " new minDistance = " << minDistance << endl;
                         }
 
                     }
 
                     Cluster::Move(pointToMove, means.point_space, toCluster);
 
-                    cout << endl << *means.point_space << endl;
+                   //  cout << endl << *means.point_space << endl;
 
                     minDistance = 10000;
                 }
@@ -213,7 +215,7 @@ namespace Clustering {
         }
         else
         {
-            cout << "Output file opened";
+            cout << endl <<  "Output file opened" << endl;
             for (int z = 0; z < k; z++)
             {
                 outStream << emptyClusters[z] << endl;

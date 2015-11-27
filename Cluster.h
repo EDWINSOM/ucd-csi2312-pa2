@@ -6,6 +6,7 @@
 #define CLUSTERING_CLUSTER_H
 
 #include "Point.h"
+#include "Exceptions.h"
 
 using namespace std;
 
@@ -35,8 +36,8 @@ namespace Clustering {
 
         static const char POINT_CLUSTER_ID_DELIM = ':';
 
-        Cluster() : size(0), head(nullptr), dimension(0), __centroid(dimension), __id(idGenerate()) { cout << endl << "new cluster: " << __id << endl;}
-        Cluster(unsigned dim) : size(0), head(nullptr), dimension(dim), __centroid(dim), __id(idGenerate()) {cout << endl << "new cluster: " << __id << endl;}
+        Cluster() : size(0), head(nullptr), dimension(0), __centroid(dimension), __id(idGenerate()) { }
+        Cluster(unsigned dim) : size(0), head(nullptr), dimension(dim), __centroid(dim), __id(idGenerate()) {}
 
         static unsigned int idGenerate();
 
@@ -47,15 +48,15 @@ namespace Clustering {
 
         // Set functions: They allow calling c1.add(c2.remove(p));
         void add(const PointPtr &);
-        const PointPtr &remove(const PointPtr &);
+        const PointPtr &remove(const PointPtr &) throw (RemoveFromEmptyEx);
 
         const Point& setCentroid(const Point &);
         const Point getCentroid() const;
-        const Point& computeCentroid();
+        const Point& computeCentroid() throw (RemoveFromEmptyEx);
 
         // Overloaded operators
 
-
+        Point &operator[](unsigned) throw (OutOfBoundsEx);      // Overloaded [] index operator
         // Set-preserving operators (do not duplicate points in the space)
         // - Friends
         friend bool operator==(const Cluster &lhs, const Cluster &rhs);

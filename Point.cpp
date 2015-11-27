@@ -3,6 +3,7 @@
 //
 
 #include "Point.h"
+#include "Exceptions.h"
 #include <cmath>
 #include <fstream>
 #include <sstream>
@@ -22,11 +23,22 @@ using std::string;
 
 using namespace std;
 
-
+static unsigned int pointIDtracker = 0;
 
 namespace Clustering {
 
+    unsigned int Point::idGenerate()
+    {
 
+        ++pointIDtracker;
+
+        return pointIDtracker;
+    }
+
+    void Point::rewindIdGen()
+    {
+        --pointIDtracker;
+    }
 /*
  * Constructors
  */
@@ -37,6 +49,7 @@ namespace Clustering {
 
         m_Dims = 2;
         m_values = new double[2];
+        __id = idGenerate();
     }
 
     Point::Point(unsigned d)
@@ -46,6 +59,7 @@ namespace Clustering {
 
         m_Dims = d;
         m_values = new double[m_Dims];
+        __id = idGenerate();
     }
 
 // takes in n dimensions
@@ -61,6 +75,8 @@ namespace Clustering {
         for (int i = 0; i < m_Dims; i++) {
             m_values[i] = coordinates[i];
         }
+
+        __id = idGenerate();
     }
 
 
@@ -86,26 +102,43 @@ namespace Clustering {
         {
             m_values[i] = existingPoint.m_values[i];
         }
+
+
     }
 
 
 // Overloaded assignment operator
 // const argument so you don't modify what is being passed in
-    Point &Point::operator=(const Point &rhs) {
-        if (this == &rhs)                    // Prevents self-assignment
-            return *this;
+    Point &Point::operator=(const Point &rhs) throw (DimensionalityMismatchEx)
+    {
+         try
+         {
+             if (this->m_Dims != rhs.m_Dims)
+             {
+                 throw DimensionalityMismatchEx("= operator");
+             }
 
-        else
-            delete[] m_values;             // if calling Point already exists, clear member data
+         }
+            catch (DimensionalityMismatchEx stringName)
+            {
+                cout << stringName;
+                cout << endl << "Can't assign a Point to another when their dimensions do not match " << endl << endl;
+            }
 
-        m_Dims = rhs.m_Dims;
-        m_values = new double[m_Dims];     // new set of member data, equal to member data of rhs
+            if (this == &rhs)                    // Prevents self-assignment
+                return *this;
 
-        for (int i = 0; i < m_Dims; i++) {
-            m_values[i] = rhs.m_values[i];
-        }
+            else
+                delete[] m_values;             // if calling Point already exists, clear member data
 
-        return *this;                       // return calling Point
+            m_Dims = rhs.m_Dims;
+            m_values = new double[m_Dims];     // new set of member data, equal to member data of rhs
+
+            for (int i = 0; i < m_Dims; i++) {
+                m_values[i] = rhs.m_values[i];
+            }
+
+            return *this;                       // return calling Point
     }
 
 
@@ -141,14 +174,21 @@ namespace Clustering {
 
 // Overloaded [] index operator
 // returns coordinate at index
-    double &Point::operator[](unsigned index) {
+    double &Point::operator[](unsigned index) throw (OutOfBoundsEx)
+    {
 
-        if (index < m_Dims)
-           return m_values[index - 1];
+       try {
+           if (index < m_Dims)
+               return m_values[index - 1];
 
-        else
+           else {
+                throw OutOfBoundsEx("[] operator");
+           }
+       }
+        catch(OutOfBoundsEx stringName)
         {
-            cout << endl << "This coordinate does not exist. Terminating Program." << endl;
+            cout << stringName;
+            cout << endl << "This coordinate does not exist. Returning 0." << endl << endl;
             exit(1);
         }
     }
@@ -159,19 +199,26 @@ namespace Clustering {
  */
 
 // set coordinate of dimension passed in
-    void Point::setValue(unsigned dimension, double value) {
-
-        if ((dimension >= 1) && (dimension <= m_Dims))
+    void Point::setValue(unsigned dimension, double value) throw (DimensionalityMismatchEx)
+    {
+        try
         {
-            m_values[dimension-1] = value;
-            return;
-        }
+            if ((dimension >= 1) && (dimension <= m_Dims)) {
+                m_values[dimension - 1] = value;
+                return;
+            }
 
-        else
-        {
-            cout << endl << "Not a valid dimension" << endl;
-            return;
+            else {
+
+                throw DimensionalityMismatchEx("setValue");
+            }
         }
+            catch (DimensionalityMismatchEx stringName)
+            {
+                cout << stringName;
+                cout << endl << "Not a valid dimension for this Point, setting of value failed" << endl << endl;
+                return;
+            }
 
     }
 
@@ -183,22 +230,29 @@ namespace Clustering {
 /* Calculates distance between 2 points (the point calling the member function and the point passed in by reference)
    sqrt() is square root function defined in <cmath>
 */
-    double Point::distanceTo(const Point &point2) {
-        if (point2.m_Dims == m_Dims)                // both Points must have same number of dimensions
+    double Point::distanceTo(const Point &point2) throw (DimensionalityMismatchEx)
+    {
+       try {
+           if (point2.m_Dims == m_Dims)                // both Points must have same number of dimensions
+           {
+               double sum = 0;
+
+               for (int i = 0; i < m_Dims; i++) {
+                   double diff = m_values[i] - point2.m_values[i];     // coordinate-wise subtraction
+                   sum += (diff * diff);
+               }
+
+               return sqrt(sum);
+           }
+
+           else {
+               throw DimensionalityMismatchEx("distanceTo");
+           }
+       }
+        catch (DimensionalityMismatchEx stringName)
         {
-            double sum = 0;
-
-            for (int i = 0; i < m_Dims; i++) {
-                double diff = m_values[i] - point2.m_values[i];     // coordinate-wise subtraction
-                sum += (diff * diff);
-            }
-
-            return sqrt(sum);
-        }
-
-        else
-        {
-            cout << endl << "Points must have same number of dimensions. Returning 0." << endl;
+            cout << stringName;
+            cout << endl << "Can't compute distance between points with different number of dimensions. Returning 0." << endl << endl;
             return 0.0;
         }
 
@@ -278,52 +332,80 @@ namespace Clustering {
  */
 
 // modifies Point on the left
-    Point &operator+=(Point &lhs, const Point &rhs) {
-        if (&lhs == &rhs)                // adding Point to itself
-            return lhs *= 2;
+    Point &operator+=(Point &lhs, const Point &rhs) throw (DimensionalityMismatchEx)
+    {
+        try
+        {
+            if (&lhs == &rhs)                // adding Point to itself
+                return lhs *= 2;
 
-        else if (lhs.m_Dims == rhs.m_Dims) {
-            for (int i = 0; i < lhs.m_Dims; i++) {
-                lhs.m_values[i] += rhs.m_values[i];
+            else if (lhs.m_Dims == rhs.m_Dims) {
+                for (int i = 0; i < lhs.m_Dims; i++) {
+                    lhs.m_values[i] += rhs.m_values[i];
+                }
             }
+            else
+                throw DimensionalityMismatchEx("+= operator");
         }
-        else
-            cout << endl << "Points need to have same number of dimensions. No change to either point." << endl;
+        catch (DimensionalityMismatchEx stringName)
+        {
+            cout << stringName;
+            cout << endl << "Points need to have same number of dimensions. No change to either point." << endl << endl;
+        }
 
         return lhs;
+
     }
 
 // modifies Point on the left
-    Point &operator-=(Point &lhs, const Point &rhs) {
-        if (&lhs == &rhs)
-            return lhs *= 0;
+    Point &operator-=(Point &lhs, const Point &rhs) throw (DimensionalityMismatchEx)
+    {
+       try
+       {
+           if (&lhs == &rhs)
+               return lhs *= 0;
 
-        else if (lhs.m_Dims == rhs.m_Dims) {
-            for (int i = 0; i < lhs.m_Dims; i++) {
-                lhs.m_values[i] -= rhs.m_values[i];
-            }
-        }
-        else
-            cout << endl << "Points need to have same number of dimensions. No change to either point." << endl;
+           else if (lhs.m_Dims == rhs.m_Dims) {
+               for (int i = 0; i < lhs.m_Dims; i++) {
+                   lhs.m_values[i] -= rhs.m_values[i];
+               }
+           }
+           else
+               throw DimensionalityMismatchEx("-= operator");
+       }
+       catch (DimensionalityMismatchEx stringName)
+       {
+           cout << stringName;
+           cout << endl << "Points need to have same number of dimensions. No change to either point." << endl << endl;
+       }
 
         return lhs;
     }
 
 
 // returns temporary Point
-    const Point operator+(const Point &lhs, const Point &rhs) {
+    const Point operator+(const Point &lhs, const Point &rhs) throw (DimensionalityMismatchEx)
+    {
 
-        if (lhs.m_Dims == rhs.m_Dims) {
-            Point p(lhs.m_Dims);
+       try
+       {
+           if (lhs.m_Dims == rhs.m_Dims) {
+               Point p(lhs.m_Dims);
 
-            for (int i = 0; i < lhs.m_Dims; i++) {
-                p.m_values[i] = (lhs.m_values[i] + rhs.m_values[i]);
-            }
+               for (int i = 0; i < lhs.m_Dims; i++) {
+                   p.m_values[i] = (lhs.m_values[i] + rhs.m_values[i]);
+               }
 
-            return p;
-        }
-        else
-            cout << endl << "Undefined. Points don't have same number of dimensions. No change to any point." << endl;
+               return p;
+           }
+           else
+               throw DimensionalityMismatchEx("+ operator");
+       }
+       catch (DimensionalityMismatchEx stringName)
+       {
+           cout << stringName;
+           cout << endl << "Can't add two points when their dimensions are different. No change to any point." << endl << endl;
+       }
 
         return lhs;
 
@@ -331,19 +413,28 @@ namespace Clustering {
 
 
 // returns temporary Point
-    const Point operator-(const Point &lhs, const Point &rhs) {
-        if (lhs.m_Dims == rhs.m_Dims) {
-            Point p(lhs.m_Dims);
+    const Point operator-(const Point &lhs, const Point &rhs) throw (DimensionalityMismatchEx)
+    {
+        try
+        {
+            if (lhs.m_Dims == rhs.m_Dims) {
+                Point p(lhs.m_Dims);
 
-            for (int i = 0; i < lhs.m_Dims; i++) {
-                p.m_values[i] = (lhs.m_values[i] - rhs.m_values[i]);
+                for (int i = 0; i < lhs.m_Dims; i++) {
+                    p.m_values[i] = (lhs.m_values[i] - rhs.m_values[i]);
+                }
+
+                return p;
             }
 
-            return p;
+            else
+                throw DimensionalityMismatchEx("- operator");
         }
-
-        else
-            cout << endl << "Undefined. Points don't have same number of dimensions. No change to any point" << endl;
+        catch (DimensionalityMismatchEx stringName)
+        {
+            cout << stringName;
+            cout << endl << "Can't subtract two points when their dimensions are different. No change to any point." << endl << endl;
+        }
 
         return lhs;
     }
@@ -353,22 +444,35 @@ namespace Clustering {
 
 // returns true if both points contain same coordinates
 // Overloaded == operator
-    bool operator==(const Point &lhs, const Point &rhs) {
+    bool operator==(const Point &lhs, const Point &rhs) throw (DimensionalityMismatchEx) {
+
         bool equal = false;
 
-        if (lhs.m_Dims == rhs.m_Dims) {
-            equal = true;
-               for (int i = 0; i < lhs.m_Dims; i++) {
+        try
+        {
+                if (lhs.m_Dims == rhs.m_Dims) {
+                    equal = true;
+                    for (int i = 0; i < lhs.m_Dims; i++) {
 
-                if (lhs.m_values[i] != rhs.m_values[i]) {
-                    equal = false;
-                    break;
+                        if (lhs.m_values[i] != rhs.m_values[i]) {
+                            equal = false;
+                            break;
+                        }
+                    }
+                    if (lhs.__id != rhs.__id)
+                    {
+                        equal = false;
+                    }
                 }
-            }
-        }
 
-        else
-            cout << endl << "Can only compare points with same number of dimensions" << endl;
+                else
+                    throw DimensionalityMismatchEx("== operator");
+         }
+        catch (DimensionalityMismatchEx stringName)
+        {
+            cout << stringName;
+            cout << endl << "Can only compare points with same number of dimensions" << endl << endl;
+        }
 
         return equal;
     }
@@ -376,7 +480,8 @@ namespace Clustering {
 
 // returns true if the coordinates of the two points are different
 // Overloaded != operator
-    bool operator!=(const Point &lhs, const Point &rhs) {
+    bool operator!=(const Point &lhs, const Point &rhs) throw (DimensionalityMismatchEx)
+    {
         bool equalCatch = (lhs == rhs);
 
         return !equalCatch;
@@ -384,117 +489,131 @@ namespace Clustering {
 
 // return true is left side Point is less than Point on right hand side
 // Overloaded < operator
-    bool operator<(const Point &lhs, const Point &rhs) {
+    bool operator<(const Point &lhs, const Point &rhs) throw (DimensionalityMismatchEx)
+    {
         bool lessThen = true;
 
-        if (lhs == rhs)
-        {
-            lessThen = false;
-            return lessThen;
-        }
+      try
+      {
+          if (lhs == rhs) {
+              lessThen = false;
+              return lessThen;
+          }
 
-        if (lhs.m_Dims == rhs.m_Dims)
-        {
-            int i = lhs.m_Dims;
-            int index = 0;
+          if (lhs.m_Dims == rhs.m_Dims) {
+              int i = lhs.m_Dims;
+              int index = 0;
 
-            while( i > 0)
-            {
-                if (lhs.m_values[index] < rhs.m_values[index])
-                {
-                   return lessThen;
-                }
-                else if(lhs.m_values[index] > rhs.m_values[index])
-                {
-                    lessThen = false;
-                    return lessThen;
-                }
+              while (i > 0) {
+                  if (lhs.m_values[index] < rhs.m_values[index]) {
+                      return lessThen;
+                  }
+                  else if (lhs.m_values[index] > rhs.m_values[index]) {
+                      lessThen = false;
+                      return lessThen;
+                  }
 
-                ++index;
-                --i;
-            }
+                  ++index;
+                  --i;
+              }
 
-            lessThen = false;
-            return lessThen;
-        }
+              lessThen = false;
+              return lessThen;
+          }
 
-        else {
-            cout << endl << "Points must have equal number of dimensions. " << endl;
-            return 0;
-        }
+          else
+              throw DimensionalityMismatchEx("< operator");
+      }
 
-
+      catch (DimensionalityMismatchEx stringName)
+      {
+          cout << stringName;
+          cout << endl << "Can't compare two Points when they have different number of dimensions." << endl << endl;
+          return 0;
+      }
 
     }
 
 // return true is left side Point is greater than Point on right hand side
 // Overloaded > operator
-    bool operator>(const Point &lhs, const Point &rhs) {
+    bool operator>(const Point &lhs, const Point &rhs) throw (DimensionalityMismatchEx)
+    {
         bool greaterThen = true;
 
-        if (lhs == rhs)
-        {
-            greaterThen = false;
-            return greaterThen;
-        }
+       try
+       {
+           if (lhs == rhs) {
+               greaterThen = false;
+               return greaterThen;
+           }
 
-        if (lhs.m_Dims == rhs.m_Dims)
-        {
-            int i = lhs.m_Dims;
-            int index = 0;
+           if (lhs.m_Dims == rhs.m_Dims) {
+               int i = lhs.m_Dims;
+               int index = 0;
 
-            while( i > 0)
-            {
-                if (lhs.m_values[index] > rhs.m_values[index])
-                {
-                    return greaterThen;
-                }
-                else if (lhs.m_values[index] < rhs.m_values[index])
-                {
-                    greaterThen = false;
-                    return greaterThen;
-                }
+               while (i > 0) {
+                   if (lhs.m_values[index] > rhs.m_values[index]) {
+                       return greaterThen;
+                   }
+                   else if (lhs.m_values[index] < rhs.m_values[index]) {
+                       greaterThen = false;
+                       return greaterThen;
+                   }
 
-                ++index;
-                --i;
-            }
+                   ++index;
+                   --i;
+               }
 
-            greaterThen = false;
-            return greaterThen;
-        }
+               greaterThen = false;
+               return greaterThen;
+           }
 
-        else {
-            cout << endl << "Points must have equal number of dimensions." << endl;
-            return 0;
-        }
+           else
+               throw DimensionalityMismatchEx("> operator");
+       }
 
-    }
-
-
-    bool operator<=(const Point &lhs, const Point &rhs) {
-
-        bool lessEqual = true;
-
-        if (lhs == rhs)                  // checks if they are equal.
-        {
-            return lessEqual;
-        }
-
-        if (lhs.m_Dims == rhs.m_Dims)
-        {
-            lessEqual = (lhs < rhs);
-            return lessEqual;
-        }
-
-        else {
-            cout << endl << "Points must have equal number of dimensions." << endl;
-            return 0;
-        }
+       catch (DimensionalityMismatchEx stringName)
+       {
+           cout << stringName;
+           cout << endl << "Can't compare two Points when they have different number of dimensions." << endl << endl;
+           return 0;
+       }
 
     }
 
 
-    bool operator>=(const Point &lhs, const Point &rhs) {
+    bool operator<=(const Point &lhs, const Point &rhs) throw (DimensionalityMismatchEx)
+    {
+
+       try
+       {
+           bool lessEqual = true;
+
+           if (lhs == rhs)                  // checks if they are equal.
+           {
+               return lessEqual;
+           }
+
+           if (lhs.m_Dims == rhs.m_Dims) {
+               lessEqual = (lhs < rhs);
+               return lessEqual;
+           }
+
+           else
+               throw DimensionalityMismatchEx("<= operator");
+       }
+       catch (DimensionalityMismatchEx stringName)
+       {
+           cout << stringName;
+           cout << endl << "Can't compare two Points when they have different number of dimensions." << endl << endl;
+           return 0;
+       }
+
+    }
+
+
+    bool operator>=(const Point &lhs, const Point &rhs) throw (DimensionalityMismatchEx)
+    {
 
         bool greaterEqual = false;
 
@@ -523,12 +642,14 @@ namespace Clustering {
         return os;
     }
 
-    istream &operator>>(std::istream &os,  Point &point)
+    istream &operator>>(std::istream &os,  Point &point)  throw (DimensionalityMismatchEx)
     {
 
-        string line;
+        try {
+            string line;
+            unsigned counter = 0;
 
-            while (getline(os,line))
+            while (getline(os, line))
             {
 
                 stringstream lineStream(line);
@@ -536,22 +657,28 @@ namespace Clustering {
                 double d;
 
 
-                int i =1;
-                while(getline(lineStream, value, Point::POINT_VALUE_DELIM))
+                unsigned i = 1;
+                while (getline(lineStream, value, Point::POINT_VALUE_DELIM))
                 {
                     d = stod(value);
 
-                    point.setValue(i++,d);
+                    point.setValue(i++, d);
                 }
-
-
+                counter = i-1;
             }
 
-
-
-
+            if (point.m_Dims != counter)
+            {
+                throw DimensionalityMismatchEx(">> operator");
+            }
+        }
+        catch (DimensionalityMismatchEx stringName)
+        {
+            cout << stringName;
+            cout << endl << "Number of values read in does not equal Point's dimensionality. Bad read-in" << endl << endl;
+            point.rewindIdGen();
+        }
 
     }
-
 
 }

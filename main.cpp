@@ -2,6 +2,7 @@
 #include "Point.h"
 #include "Cluster.h"
 #include "KMeans.h"
+#include "Exceptions.h"
 
 #include <fstream>
 #include <sstream>

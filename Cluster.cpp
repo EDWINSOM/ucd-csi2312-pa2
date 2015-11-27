@@ -26,7 +26,7 @@ namespace Clustering {
         {
             head = nullptr;
             (this->__id) = (this->idGenerate());
-            cout << endl << "new cluster created: " << this->__id << endl;
+   //         cout << endl << "new cluster created: " << this->__id << endl;
             return;
         }
 
@@ -66,15 +66,13 @@ namespace Clustering {
         }
 
         (this->__centroid) = (this->computeCentroid());
-        (this->__id) = (this->idGenerate());
 
-        cout << endl << "new cluster created: " << (this->__id) << endl;
         return;
     }
 
 
     // Assignment Operator
-    Cluster &Cluster::operator=(  Cluster &cluster) {
+    Cluster &Cluster::operator=( Cluster &cluster) {
 
         if (this == &cluster)                    // does not let self assignment occur
         {
@@ -144,8 +142,6 @@ namespace Clustering {
         }
 
         (this->__centroid) = (this->computeCentroid());
-        (this->__id) = (this->idGenerate());
-        cout << endl << "new cluster created: " << (this->__id) << endl;
         return (*this);
 
     }
@@ -172,68 +168,82 @@ namespace Clustering {
 
 
     // remove a point and return it so we can add it to another cluster
-    const PointPtr &Cluster::remove(const PointPtr &unwantedPoint) {
+    const PointPtr &Cluster::remove(const PointPtr &unwantedPoint) throw (RemoveFromEmptyEx)
+    {
 
         this->validCentroid = false;
 
-        assert(this->size != 0);                                     // if empty cluster, exit program
+        try {
 
-        if (size == 1) {
-            if ((*(head->pointPointer)) == (*unwantedPoint)) {
-                head->pointPointer = nullptr;
-                head = nullptr;
-                --size;
-                return unwantedPoint;
+            if(this->size == 0)
+                throw RemoveFromEmptyEx("remove");
+
+            if (size == 1) {
+                if ((*(head->pointPointer)) == (*unwantedPoint)) {
+                    head->pointPointer = nullptr;
+                    head = nullptr;
+                    --size;
+                    return unwantedPoint;
+                }
+                else {
+                    cout << endl << "Such a point isn't contained in this cluster. Returning unwanted point" << endl;
+                    return unwantedPoint;
+                }
             }
-            else {
-                cout << endl << "Such a point isn't contained in this cluster. Returning unwanted point" << endl;
-                return unwantedPoint;
+
+            if (size == 2) {
+                if ((*(head->pointPointer)) == (*unwantedPoint)) {
+                    head->pointPointer = nullptr;
+                    NodePtr p = head->nextNode;
+                    head->nextNode = nullptr;
+                    head = p;
+                    --size;
+                    (this->__centroid) = this->computeCentroid();
+                    return unwantedPoint;
+                }
+                else if ((*(head->nextNode->pointPointer)) == (*unwantedPoint)) {
+                    head->nextNode->pointPointer = nullptr;
+                    head->nextNode = nullptr;
+                    --size;
+                    (this->__centroid) = this->computeCentroid();
+                    return unwantedPoint;
+                }
+                else {
+                    cout << endl << "Such a point isn't contained in this cluster. Returning unwanted point" << endl;
+                    return unwantedPoint;
+                }
             }
+
+            NodePtr current = head;
+
+            Cluster copy;
+
+            for (current; current != nullptr; current = current->nextNode) {
+                if ((*(current->pointPointer)) != (*unwantedPoint)) {
+                    copy.add(current->pointPointer);
+                }
+            }
+
+            (*this) = copy;
+            (this->__centroid) = this->computeCentroid();
+            return unwantedPoint;
         }
 
-        if (size == 2) {
-            if ((*(head->pointPointer)) == (*unwantedPoint)) {
-                head->pointPointer = nullptr;
-                NodePtr p = head->nextNode;
-                head->nextNode = nullptr;
-                head = p;
-                --size;
-                (this->__centroid) = this->computeCentroid();
-                return unwantedPoint;
-            }
-            else if ((*(head->nextNode->pointPointer)) == (*unwantedPoint)) {
-                head->nextNode->pointPointer = nullptr;
-                head->nextNode = nullptr;
-                --size;
-                (this->__centroid) = this->computeCentroid();
-                return unwantedPoint;
-            }
-            else {
-                cout << endl << "Such a point isn't contained in this cluster. Returning unwanted point" << endl;
-                return unwantedPoint;
-            }
+        catch(RemoveFromEmptyEx stringName)
+        {
+            cout << stringName;
+            cout << endl << "Cluster is already empty. No points to remove" << endl << endl;
+            return nullptr;
         }
-
-        NodePtr current = head;
-
-        Cluster copy;
-
-        for (current; current != nullptr; current = current->nextNode) {
-            if ((*(current->pointPointer)) != (*unwantedPoint)) {
-                copy.add(current->pointPointer);
-            }
-        }
-
-        (*this) = copy;
-        (this->__centroid) = this->computeCentroid();
-        return unwantedPoint;
-
 
     }
 
 
     void Cluster::add(const PointPtr &point)                      // add a point
     {
+        if (point == nullptr)
+            return;
+
         NodePtr newNode = new Node;
         this->validCentroid = false;
 
@@ -361,6 +371,40 @@ namespace Clustering {
         return os;
 
 
+    }
+
+    Point &Cluster::operator[](unsigned index) throw (OutOfBoundsEx)
+    {
+        NodePtr current = this->head;
+        try
+        {
+            if (index < this->size)
+            {
+                if (index == 0)
+                {
+                    return (*(this->head->pointPointer));
+                }
+                else
+                {
+                    for(int counter = 0; (current != nullptr) && (counter < index) ; counter++)
+                    {
+                        current = current->nextNode;
+                    }
+
+                    return (*(current->pointPointer));
+                }
+            }
+            else
+            {
+                throw OutOfBoundsEx("[] operator");
+            }
+        }
+        catch (OutOfBoundsEx stringName)
+        {
+            cout << stringName;
+            cout << endl << "Index is invalid. No such index available in this cluster." << endl << endl;
+            exit(1);
+        }
     }
 
     bool operator==(const Cluster &lhs, const Cluster &rhs) {
@@ -557,21 +601,32 @@ const Cluster operator+(Cluster &lhs, PointPtr &rhs)
         return this->__centroid;
     }
 
-    const Point& Cluster::computeCentroid()
+    const Point& Cluster::computeCentroid() throw (RemoveFromEmptyEx)
     {
-        this->validCentroid = true;
+       try {
 
-        (this->__centroid) /= (this->size);
-        NodePtr tracker = (this->head->nextNode);
+           if(this->size == 0)
+               throw RemoveFromEmptyEx("computeCentroid");
 
-        while(tracker != nullptr)
+           this->validCentroid = true;
+
+           (this->__centroid) /= (this->size);
+           NodePtr tracker = (this->head->nextNode);
+
+           while (tracker != nullptr) {
+               (this->__centroid) += ((*(tracker->pointPointer)) / (this->size));
+               tracker = (tracker->nextNode);
+           }
+
+           this->setCentroid(this->__centroid);
+           return (this->__centroid);
+       }
+        catch (RemoveFromEmptyEx stringName)
         {
-            (this->__centroid) += ( (*(tracker->pointPointer))/ (this->size));
-            tracker = (tracker->nextNode);
+            cout << stringName;
+            cout << endl << "Cluster is empty. No centroid available" << endl << endl;
+            return this->__centroid;
         }
-
-        this->setCentroid(this->__centroid);
-        return (this->__centroid);
     }
 
 
@@ -593,7 +648,7 @@ const Cluster operator+(Cluster &lhs, PointPtr &rhs)
         (this->destination) = (to);
         (this->origin) = (from);
 
-        cout << endl << endl << "Moving point " << *ptr << " from point space to cluster number " << to->__id << endl << endl;
+  //      cout << endl << endl << "Moving point " << *ptr << " from point space to cluster number " << to->__id << endl << endl;
 
         perform();
     }
@@ -605,7 +660,7 @@ const Cluster operator+(Cluster &lhs, PointPtr &rhs)
 
     void Cluster::pickPoints(int k, Point pointArray [])
     {
-            cout << endl << "Entering pickPoints " << endl;
+         //   cout << endl << "Entering pickPoints " << endl;
 
             NodePtr current = head;
             unsigned arrayTracker = 0;
@@ -615,7 +670,7 @@ const Cluster operator+(Cluster &lhs, PointPtr &rhs)
             if(k > size)
             {
                 k = size;
-                cout << endl << "k is greater than size of cluster, setting k to size of cluster" << endl;
+                cout << endl << "k is greater than size of cluster, setting k to size of cluster" << endl << endl;
             }
 
             else if (k < size)
