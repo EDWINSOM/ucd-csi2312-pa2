@@ -134,14 +134,14 @@ namespace Clustering {
 
         means.point_space->pickPoints(k ,pointer);
 
-    /*    cout << endl << "Pick points result: ";
+       cout << endl << "Pick points result: ";
 
         for (int counter = 0; counter < k ; counter++)
         {
             cout << endl << fillCentroid[counter] << endl;
         }
 
-     */
+
 
         Cluster emptyClusters[k];
 
@@ -153,7 +153,7 @@ namespace Clustering {
         for (int i = 0; i < k; i++)
         {
             emptyClusters[i].setCentroid(fillCentroid[i]);
-          //  cout << endl << "Empty Cluster " << i+1 << " has centroid: " << emptyClusters[i].__centroid << endl;
+            cout << endl << "Empty Cluster " << i+1 << " has centroid: " << emptyClusters[i].__centroid << endl;
         }
 
 
@@ -163,9 +163,8 @@ namespace Clustering {
         double minDistance = 10000;
         double readDistance = 0;
 
-        PointPtr pointToMove = nullptr;
+        Point pointToMove;
         ClusterPtr toCluster = nullptr;
-        NodePtr current;
 
         int w = 0;
 
@@ -177,30 +176,36 @@ namespace Clustering {
 
 
         else {
-            for (scoreDiff; scoreDiff > SCORE_DIFF_THRESHOLD; scoreDiff = (abs(scoreDiff - score))) {
-                for (current = means.point_space->head; current != nullptr; current = means.point_space->head) {
-                    for (int j = 0; j < k; j++) {
-                        readDistance = (*(current->pointPointer)).distanceTo(emptyClusters[j].__centroid);
-                      //  cout << endl << " Distance between " << (*(current->pointPointer)) << " and " <<
-                       // emptyClusters[j].__centroid << " = " << readDistance << endl;
+            for (scoreDiff; scoreDiff > SCORE_DIFF_THRESHOLD; scoreDiff = (abs(scoreDiff - score)))
+            {
+                for (std::forward_list<Point>::iterator it = means.point_space->head.begin(); it != means.point_space->head.end(); it = means.point_space->head.begin())
+                {
+                    for (int j = 0; j < k; j++)
+                    {
+                        readDistance = (*it).distanceTo(emptyClusters[j].__centroid);
+                        cout << endl << " Distance between " << (*it) << " and " <<
+                        emptyClusters[j].__centroid << " = " << readDistance << endl;
 
                         if (readDistance < minDistance) {
-                            pointToMove = current->pointPointer;
-                            toCluster = &emptyClusters[j];
+                            pointToMove = *it;
+                            toCluster = (emptyClusters+j);
                             minDistance = readDistance;
-                     //       cout << endl << " new minDistance = " << minDistance << endl;
+                           cout << endl << " new minDistance = " << minDistance << endl;
                         }
 
                     }
 
                     Cluster::Move(pointToMove, means.point_space, toCluster);
-
-                   //  cout << endl << *means.point_space << endl;
+                    means.point_space->head.pop_front();
+                    --means.point_space->size;
 
                     minDistance = 10000;
                 }
 
                 score = computeClusteringScore(emptyClusters);
+                cout << endl << "score = " << score << endl;
+                if (score == 0)
+                    break;
 
             }
         }

@@ -3,6 +3,7 @@
 #include "Cluster.h"
 #include "KMeans.h"
 #include "Exceptions.h"
+#include <forward_list>
 
 #include <fstream>
 #include <sstream>
@@ -33,7 +34,6 @@ int main() {
    instance.clusteringAlgor(instance);
 
     myFile.close();
-
 
 
     return 0;

@@ -48,7 +48,7 @@ namespace Clustering {
     Point::Point() {
 
         m_Dims = 2;
-        m_values = new double[2];
+        m_values.resize(2);
         __id = idGenerate();
     }
 
@@ -58,7 +58,7 @@ namespace Clustering {
             d = 2;
 
         m_Dims = d;
-        m_values = new double[m_Dims];
+        m_values.resize(m_Dims);
         __id = idGenerate();
     }
 
@@ -69,7 +69,7 @@ namespace Clustering {
             dimensions = 2;
 
         m_Dims = dimensions;
-        m_values = new double[m_Dims];
+        m_values.resize(m_Dims);
 
         // copy double * coordinates into m_values
         for (int i = 0; i < m_Dims; i++) {
@@ -88,7 +88,7 @@ namespace Clustering {
 // Destructor
     Point::~Point() {
 
-        delete[] m_values;
+        m_values.clear();
     }
 
 
@@ -96,7 +96,7 @@ namespace Clustering {
     Point::Point(const Point &existingPoint) {
 
         m_Dims = existingPoint.m_Dims;                // want same number of dimensions
-        m_values = new double[m_Dims];
+        m_values.resize(m_Dims);
 
         for (int i = 0; i < m_Dims; i++)      // want to copy the values
         {
@@ -111,28 +111,29 @@ namespace Clustering {
 // const argument so you don't modify what is being passed in
     Point &Point::operator=(const Point &rhs) throw (DimensionalityMismatchEx)
     {
-         try
-         {
-             if (this->m_Dims != rhs.m_Dims)
-             {
-                 throw DimensionalityMismatchEx("= operator");
-             }
-
-         }
-            catch (DimensionalityMismatchEx stringName)
-            {
-                cout << stringName;
-                cout << endl << "Can't assign a Point to another when their dimensions do not match " << endl << endl;
-            }
 
             if (this == &rhs)                    // Prevents self-assignment
                 return *this;
 
             else
-                delete[] m_values;             // if calling Point already exists, clear member data
+                m_values.clear();             // if calling Point already exists, clear member data
 
             m_Dims = rhs.m_Dims;
-            m_values = new double[m_Dims];     // new set of member data, equal to member data of rhs
+            m_values.resize(m_Dims);     // new set of member data, equal to member data of rhs
+
+        try
+        {
+            if (this->m_Dims != rhs.m_Dims)
+            {
+                throw DimensionalityMismatchEx("= operator");
+            }
+
+        }
+        catch (DimensionalityMismatchEx stringName)
+        {
+            cout << stringName;
+            cout << endl << "Can't assign a Point to another when their dimensions do not match " << endl << endl;
+        }
 
             for (int i = 0; i < m_Dims; i++) {
                 m_values[i] = rhs.m_values[i];
@@ -152,7 +153,7 @@ namespace Clustering {
     double Point::getValue(unsigned dimension) const {
 
         if (dimension >= 1 && dimension <= m_Dims)
-            return m_values[dimension - 1];
+            return m_values.at(dimension - 1);
 
         else
         {
@@ -188,7 +189,7 @@ namespace Clustering {
         catch(OutOfBoundsEx stringName)
         {
             cout << stringName;
-            cout << endl << "This coordinate does not exist. Returning 0." << endl << endl;
+            cout << endl << "This coordinate does not exist" << endl << endl;
             exit(1);
         }
     }
@@ -199,7 +200,7 @@ namespace Clustering {
  */
 
 // set coordinate of dimension passed in
-    void Point::setValue(unsigned dimension, double value) throw (DimensionalityMismatchEx)
+    void Point::setValue(unsigned dimension, double value)  throw (DimensionalityMismatchEx)
     {
         try
         {
@@ -230,7 +231,7 @@ namespace Clustering {
 /* Calculates distance between 2 points (the point calling the member function and the point passed in by reference)
    sqrt() is square root function defined in <cmath>
 */
-    double Point::distanceTo(const Point &point2) throw (DimensionalityMismatchEx)
+    double Point::distanceTo(Point &point2) throw (DimensionalityMismatchEx)
     {
        try {
            if (point2.m_Dims == m_Dims)                // both Points must have same number of dimensions

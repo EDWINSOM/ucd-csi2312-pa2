@@ -30,3 +30,4 @@ namespace Clustering {
         return ostream2;
     }
 }
+

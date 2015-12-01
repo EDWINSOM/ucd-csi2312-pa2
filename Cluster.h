@@ -5,6 +5,8 @@
 #ifndef CLUSTERING_CLUSTER_H
 #define CLUSTERING_CLUSTER_H
 
+#include <forward_list>
+
 #include "Point.h"
 #include "Exceptions.h"
 
@@ -23,8 +25,8 @@ namespace Clustering {
     };
 
     class Cluster {
-        unsigned size;               // number of nodes in cluster (# of Point objects)
-        NodePtr head;           // pointer to first node
+        unsigned size;                       // number of nodes in cluster (# of Point objects)
+        std::forward_list<Point> head;       // pointer to first node
         unsigned dimension;
         Point __centroid;
         bool validCentroid = false;
@@ -36,8 +38,8 @@ namespace Clustering {
 
         static const char POINT_CLUSTER_ID_DELIM = ':';
 
-        Cluster() : size(0), head(nullptr), dimension(0), __centroid(dimension), __id(idGenerate()) { }
-        Cluster(unsigned dim) : size(0), head(nullptr), dimension(dim), __centroid(dim), __id(idGenerate()) {}
+        Cluster() : size(0), dimension(0), __centroid(dimension), __id(idGenerate()) { head.clear(); }
+        Cluster(unsigned dim) : size(0), dimension(dim), __centroid(dim), __id(idGenerate()) { head.clear(); }
 
         static unsigned int idGenerate();
 
@@ -47,8 +49,8 @@ namespace Clustering {
         ~Cluster();
 
         // Set functions: They allow calling c1.add(c2.remove(p));
-        void add(const PointPtr &);
-        const PointPtr &remove(const PointPtr &) throw (RemoveFromEmptyEx);
+        void add(const Point &);
+        void remove(const Point &) throw (RemoveFromEmptyEx);
 
         const Point& setCentroid(const Point &);
         const Point getCentroid() const;
@@ -84,25 +86,26 @@ namespace Clustering {
         unsigned getSize();
         unsigned getDimension();
 
-        double intraClusterDistance() const;
+        double intraClusterDistance();
 
-        friend double interClusterDistance(const Cluster &c1, const Cluster &c2);
+        friend double interClusterDistance(Cluster &c1, Cluster &c2);
 
         int getClusterEdges();
 
         friend double interClusterEdges(const Cluster &c1, const Cluster &c2);
 
+        bool contains(const Point &);
 
         class Move
         {
         public:
             Move(){}
 
-            Move(const PointPtr &ptr, Cluster* &from, Cluster* &to);
+            Move(const Point &ptr, Cluster* &from, Cluster* &to);
 
         private:
             void perform();                                     // helper functions
-            Point* toMove;
+            Point toMove;
             Cluster* origin;
             Cluster* destination;
 

@@ -11,8 +11,10 @@
 // Coordinates are double-precision floating point.
 
 #include <iostream>
+#include <vector>
 #include "Exceptions.h"
 
+using namespace std;
 
 namespace Clustering {
 
@@ -20,8 +22,8 @@ namespace Clustering {
 
     class Point {
 
-        unsigned m_Dims;                                  // number of dimensions of the point
-        double *m_values;                                 // values of the point's dimensions
+        unsigned m_Dims;                                           // number of dimensions of the point
+        vector<double> m_values;                                 // values of the point's dimensions
         unsigned int __id;
 
     public:
@@ -49,7 +51,7 @@ namespace Clustering {
         void setValue(unsigned, double) throw (DimensionalityMismatchEx);                   // sets value of dimension passed in
 
         // Functions
-        double distanceTo(const Point &) throw (DimensionalityMismatchEx);             // function calculates the distance between two points
+        double distanceTo(Point &) throw (DimensionalityMismatchEx);             // function calculates the distance between two points
 
         // Overloaded Operators
         Point &operator*= (double);                     // modifies Point on the left
